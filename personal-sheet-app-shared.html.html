@@ -1,0 +1,3221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>パーソナルシート ｜ トレーニングログ</title>
+<style>
+  :root{
+    --bg:#10150F;
+    --surface:#171F19;
+    --surface-2:#1F2B22;
+    --ink:#EAF0E6;
+    --ink-dim:#8CA292;
+    --lime:#6CC24A;
+    --lime-dim:#4C8F34;
+    --flame:#FF6B47;
+    --line:#28352C;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .display{font-family:Oswald,"Arial Narrow",Impact,"Hiragino Kaku Gothic ProN",sans-serif;
+    font-weight:700; letter-spacing:0.02em; text-transform:uppercase;}
+  .mono{font-family:"SFMono-Regular",Consolas,"Menlo",monospace;}
+
+  #app{max-width:980px;margin:0 auto;padding:18px 16px 60px;}
+
+  /* header */
+  header.top{
+    display:flex;align-items:baseline;justify-content:space-between;
+    border-bottom:2px solid var(--line);padding-bottom:14px;margin-bottom:18px;
+    flex-wrap:wrap;gap:8px;
+  }
+  header.top .brand{display:flex;align-items:baseline;gap:10px;}
+  header.top .brand .mark{
+    background:var(--lime);color:var(--bg);font-weight:800;border-radius:4px;
+    padding:2px 8px;font-size:13px;letter-spacing:0.05em;
+  }
+  header.top h1{font-size:22px;margin:0;letter-spacing:0.03em;}
+  header.top .sub{color:var(--ink-dim);font-size:12px;}
+  .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+  .theme-picker{display:flex;align-items:center;gap:6px;}
+  .swatch{
+    width:20px;height:20px;border-radius:50%;border:2px solid transparent;
+    background:var(--sw);cursor:pointer;padding:0;position:relative;
+  }
+  .swatch.active{border-color:var(--ink);}
+  .swatch.custom{overflow:hidden;display:inline-block;}
+  .swatch.custom input[type="color"]{
+    width:34px;height:34px;margin:-7px 0 0 -7px;border:none;padding:0;cursor:pointer;background:none;
+  }
+
+  /* tabs */
+  .tabbar-2{margin-top:-8px;}
+  .tabbar-2 .tab{font-size:12px;padding:7px 12px;}
+  .tabbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+  .tab{
+    background:var(--surface);border:1px solid var(--line);color:var(--ink-dim);
+    padding:9px 14px;border-radius:999px;cursor:pointer;font-size:13px;
+    display:flex;align-items:center;gap:8px;transition:all .15s ease;
+  }
+  .tab .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:20px;height:20px;border-radius:50%;background:var(--surface-2);
+    font-family:"SFMono-Regular",monospace;font-size:11px;color:var(--ink-dim);
+  }
+  .tab.active{border-color:var(--lime);color:var(--ink);background:var(--surface-2);}
+  .tab.active .num{background:var(--lime);color:var(--bg);}
+  .tab .ring{
+    width:26px;height:26px;border-radius:50%;
+    background:conic-gradient(var(--lime) calc(var(--pct,0)*1%), var(--line) 0);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tab .ring::after{content:"";width:18px;height:18px;border-radius:50%;background:var(--surface);}
+  .tab.active .ring::after{background:var(--surface-2);}
+
+  section.panel{display:none;}
+  section.panel.active{display:block;}
+
+  /* week header */
+  .week-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:12px;gap:12px;flex-wrap:wrap;
+  }
+  .week-head .title{display:flex;align-items:center;gap:12px;}
+  .week-head .title .big{font-size:34px;line-height:1;}
+  .week-head .title .days{color:var(--ink-dim);font-size:12px;}
+  .datebox{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-dim);}
+  .datebox input{
+    background:var(--surface);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;
+  }
+
+  /* exercise × day check grid */
+  .checkgrid-wrap{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    overflow-x:auto;margin-bottom:10px;
+  }
+  .checkgrid{width:100%;border-collapse:collapse;min-width:420px;}
+  .checkgrid thead th{
+    text-align:center;font-size:11px;color:var(--ink-dim);font-weight:600;
+    padding:8px 4px;border-bottom:1px solid var(--line);background:var(--surface-2);
+    font-family:"SFMono-Regular",monospace;
+  }
+  .checkgrid .ex-col{text-align:left;font-size:12px;padding:8px 10px;white-space:nowrap;
+    max-width:160px;overflow:hidden;text-overflow:ellipsis;}
+  .checkgrid thead th.ex-col{text-align:left;font-family:inherit;}
+  .checkgrid tbody td{padding:4px;border-bottom:1px solid var(--line);text-align:center;}
+  .checkgrid tbody tr:last-child td{border-bottom:none;}
+  .chk-cell{
+    width:30px;height:30px;border-radius:7px;border:1px solid var(--line);
+    background:var(--surface-2);color:transparent;cursor:pointer;font-size:14px;font-weight:700;
+    transition:transform .1s ease;
+  }
+  .chk-cell:active{transform:scale(0.88);}
+  .chk-cell.s-done{background:color-mix(in srgb, var(--lime) 15%, transparent);border-color:var(--lime);color:var(--lime);}
+  .chk-cell.s-skip{background:rgba(255,90,54,0.12);border-color:var(--flame);color:var(--flame);}
+  .grid-legend{
+    display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--ink-dim);margin-bottom:16px;
+  }
+  .grid-legend span{display:flex;align-items:center;gap:5px;}
+  .grid-legend .lg{width:10px;height:10px;border-radius:3px;display:inline-block;border:1px solid var(--line);}
+  .lg-done{background:color-mix(in srgb, var(--lime) 15%, transparent);border-color:var(--lime);}
+  .lg-skip{background:rgba(255,90,54,0.12);border-color:var(--flame);}
+  .lg-none{background:var(--surface-2);}
+  .grid-empty{padding:16px;color:var(--ink-dim);font-size:12px;}
+
+  /* exercise table */
+  .table-wrap{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    overflow-x:auto;margin-bottom:14px;
+  }
+  table{width:100%;border-collapse:collapse;min-width:760px;}
+  thead th{
+    text-align:left;font-size:11px;color:var(--ink-dim);font-weight:600;
+    padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap;
+    background:var(--surface-2);
+  }
+  tbody td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+  td input, td select{
+    width:100%;background:transparent;border:none;color:var(--ink);
+    font-size:13px;font-family:inherit;padding:4px 2px;border-radius:4px;
+  }
+  td input:focus, td select:focus{outline:1px solid var(--lime);background:var(--surface-2);}
+  td.num input{font-family:"SFMono-Regular",monospace;text-align:center;}
+  .type-pill{
+    font-size:10px;padding:3px 6px;border-radius:5px;font-family:"SFMono-Regular",monospace;
+    border:1px solid var(--line);background:transparent;color:var(--ink-dim);cursor:pointer;
+  }
+  .type-pill[data-t="CA"]{}
+  select.rpe{font-family:"SFMono-Regular",monospace;}
+  .rpe-cell{display:flex;align-items:center;gap:6px;}
+  .rpe-dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .video-cell{display:flex;align-items:center;gap:4px;}
+  .video-cell input{flex:1;min-width:60px;}
+  .play-btn{
+    flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--lime);
+    background:color-mix(in srgb, var(--lime) 10%, transparent);color:var(--lime);font-size:10px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;padding:0 0 0 1px;
+  }
+  .play-btn:hover{background:var(--lime);color:var(--bg);}
+
+  .video-modal{
+    display:none;position:fixed;inset:0;background:rgba(10,11,13,0.85);
+    z-index:50;align-items:center;justify-content:center;padding:20px;
+  }
+  .video-modal.show{display:flex;}
+  .video-modal .box{
+    width:100%;max-width:720px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden;
+  }
+  .video-modal .box-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 14px;border-bottom:1px solid var(--line);
+  }
+  .video-modal .box-head span{font-size:12px;color:var(--ink-dim);}
+  .video-modal .box-head button{
+    background:none;border:none;color:var(--ink-dim);font-size:18px;cursor:pointer;
+  }
+  .video-modal .frame-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;}
+  .video-modal iframe{width:100%;height:100%;border:none;}
+  .video-modal .fallback{
+    padding:30px 20px;text-align:center;color:var(--ink-dim);font-size:13px;line-height:1.8;
+  }
+  .video-modal .fallback a{color:var(--lime);}
+
+  .del-row{background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:16px;padding:4px 6px;}
+  .del-row:hover{color:var(--flame);}
+  .add-row{
+    display:inline-flex;align-items:center;gap:6px;background:none;border:1px dashed var(--line);
+    color:var(--ink-dim);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px;margin-bottom:22px;
+  }
+  .add-row:hover{border-color:var(--lime);color:var(--lime);}
+
+  /* care library */
+  .care-groups{display:grid;gap:14px;}
+  .care-group h3{
+    font-size:13px;color:var(--ink-dim);margin:0 0 8px;text-transform:uppercase;
+    letter-spacing:0.05em;display:flex;align-items:center;gap:8px;
+  }
+  .care-group h3::before{content:"";width:14px;height:2px;background:var(--lime);display:inline-block;}
+  .care-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;}
+  .care-item{
+    background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+  }
+  .care-item-main{display:flex;flex-direction:column;gap:6px;}
+  .care-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .care-item .name{font-size:13px;}
+  .care-item .who{font-size:11px;color:var(--ink-dim);}
+  .care-item .time{
+    font-family:"SFMono-Regular",monospace;font-size:12px;color:var(--lime);
+    background:color-mix(in srgb, var(--lime) 8%, transparent);padding:3px 8px;border-radius:6px;flex:none;
+  }
+  .care-item .video-cell{
+    border-top:1px dashed var(--line);padding-top:6px;margin-top:2px;
+  }
+  .care-item .video-cell input{
+    background:var(--surface-2);border:1px solid var(--line);border-radius:6px;
+    padding:5px 8px;font-size:12px;
+  }
+
+  /* cardio */
+  .cardio-form{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;margin-bottom:16px;
+  }
+  .cardio-inputs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .cardio-inputs input, .cardio-inputs select{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;
+  }
+  .cardio-inputs input[type="date"]{min-width:130px;}
+  .cardio-inputs input[type="number"]{width:100px;}
+  .cardio-inputs input[type="text"]{flex:1;min-width:120px;}
+
+  /* medical data */
+  .goal-pinned-card{
+    background:var(--surface);border:1px solid var(--lime);border-radius:var(--radius);
+    padding:16px;margin-bottom:18px;
+  }
+  .goal-pinned-label{font-size:11px;color:var(--ink-dim);margin-bottom:10px;}
+  .lesch-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-bottom:18px;
+  }
+  .lesch-controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .seg button{
+    background:var(--surface-2);border:none;color:var(--ink-dim);padding:8px 14px;
+    font-size:12px;cursor:pointer;font-family:inherit;
+  }
+  .seg button.active{background:var(--lime);color:var(--bg);font-weight:600;}
+  .lesch-body{display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+  .lesch-svg{background:var(--surface-2);border-radius:8px;flex:none;}
+  .lesch-note{flex:1;min-width:180px;}
+  .lesch-label{font-size:13px;color:var(--lime);font-weight:600;margin-bottom:6px;}
+  .lesch-desc{font-size:11px;color:var(--ink-dim);line-height:1.7;margin:0;}
+
+  .metric-section{margin-bottom:22px;}
+  .metric-section-title{
+    font-size:13px;color:var(--ink);margin:0 0 10px;text-transform:uppercase;letter-spacing:0.04em;
+    display:flex;align-items:center;gap:8px;
+  }
+  .metric-section-title::before{content:"";width:14px;height:2px;background:var(--lime);display:inline-block;}
+  .total-card{
+    background:color-mix(in srgb, var(--lime) 8%, transparent);border:1px solid var(--lime-dim);
+    border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:10px;font-size:12px;
+  }
+  .total-card .total-value{color:var(--lime);font-size:14px;}
+  .metric-grid-inner{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+  .metric-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;
+  }
+  .metric-card.metric-card-goal, .total-card.metric-card-goal{border-color:var(--lime);}
+  .goal-linked-badge{
+    font-size:9px;font-weight:400;color:var(--lime);background:color-mix(in srgb, var(--lime) 12%, transparent);
+    padding:2px 6px;border-radius:5px;white-space:nowrap;
+  }
+  .metric-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;}
+  .metric-name{font-size:13px;font-weight:600;}
+  .metric-card-actions{display:flex;gap:2px;flex:none;}
+  .metric-latest{display:flex;align-items:baseline;gap:6px;margin-bottom:8px;}
+  .metric-latest .big-num{font-size:28px;color:var(--lime);}
+  .metric-latest .unit{font-size:12px;color:var(--ink-dim);}
+  .metric-chart{margin-bottom:10px;min-height:40px;}
+  .chart-empty{color:var(--ink-dim);font-size:12px;padding:10px 0;}
+  .metric-add{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+  .metric-add input{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;flex:1;min-width:80px;
+  }
+  .metric-hist{border-top:1px solid var(--line);padding-top:6px;display:flex;flex-direction:column;gap:4px;}
+  .hist-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink-dim);}
+  .hist-row .del-row{font-size:13px;padding:0 4px;}
+
+  .compare-row{display:flex;gap:6px;margin-bottom:8px;}
+  .compare-cell{
+    flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;
+    padding:8px;text-align:center;
+  }
+  .compare-label{display:block;font-size:9px;color:var(--ink-dim);margin-bottom:4px;}
+  .compare-value{display:block;font-size:13px;}
+  .compare-value .arrow{font-size:9px;margin-left:3px;}
+  .arrow.up{color:var(--lime);}
+  .arrow.down{color:var(--flame);}
+  .arrow.flat{color:var(--ink-dim);}
+  .compare-date{display:block;font-size:9px;color:var(--ink-dim);margin-top:3px;}
+
+  /* annual */
+  .annual-goal-card{
+    background:var(--surface);border:1px solid var(--lime);border-radius:var(--radius);
+    padding:16px;margin-bottom:18px;
+  }
+  .annual-controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+  .annual-controls select{
+    background:var(--surface);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;
+  }
+  .annual-chart-wrap{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;margin-bottom:12px;
+  }
+  .annual-stats{display:flex;gap:8px;flex-wrap:wrap;}
+  .stat-pill{
+    background:var(--surface);border:1px solid var(--line);border-radius:8px;
+    padding:8px 12px;font-size:12px;color:var(--ink-dim);display:flex;gap:6px;align-items:center;
+  }
+  .stat-pill .mono{color:var(--ink);}
+
+  /* goals */
+  .goals-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .goal-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;
+  }
+  .goal-card.trainer{border-color:var(--lime-dim);}
+  .goal-card h3{
+    font-size:12px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 12px;
+  }
+  .goal-card label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--ink-dim);margin-bottom:12px;}
+  .goal-card textarea, .goal-card input{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:8px;font-size:13px;font-family:inherit;resize:vertical;
+  }
+  @media (max-width:640px){ .goals-grid{grid-template-columns:1fr;} }
+
+  /* karte */
+  .karte-form{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  }
+  .karte-form input[type="date"], .karte-form input[type="text"]{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;
+  }
+  .karte-form input[type="text"]{flex:1;min-width:140px;}
+  .k-conditions{display:flex;gap:6px;flex-wrap:wrap;}
+  .cond-btn{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink-dim);
+    border-radius:999px;padding:6px 12px;font-size:11px;cursor:pointer;
+  }
+  .cond-btn.active{background:color-mix(in srgb, var(--cc) 20%, transparent);border-color:var(--cc);color:var(--cc);}
+  .karte-list{display:flex;flex-direction:column;gap:6px;}
+  .karte-row{
+    background:var(--surface);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;display:flex;align-items:center;gap:12px;
+  }
+  .karte-date{color:var(--ink-dim);font-size:12px;flex:none;}
+  .karte-cond{
+    font-size:11px;padding:3px 8px;border-radius:6px;flex:none;
+    background:color-mix(in srgb, var(--cc) 15%, transparent);color:var(--cc);border:1px solid var(--cc);
+  }
+  .karte-cond.muted{color:var(--ink-dim);background:none;border-color:var(--line);}
+  .karte-memo{flex:1;font-size:13px;}
+
+  /* batch entry */
+  .batch-card{
+    background:var(--surface);border:1px solid var(--lime-dim);border-radius:var(--radius);
+    padding:16px;margin-bottom:18px;
+  }
+  .batch-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .batch-hint{font-size:11px;color:var(--ink-dim);}
+  .batch-date-row{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+  .batch-date-row label{font-size:12px;color:var(--ink-dim);display:flex;align-items:center;gap:6px;}
+  .batch-date-row input{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:7px 10px;font-size:13px;font-family:inherit;
+  }
+  .batch-groups{display:flex;flex-direction:column;gap:14px;}
+  .batch-group h4{font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.04em;margin:0 0 6px;}
+  .batch-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
+  .batch-field{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ink-dim);}
+  .batch-field em{font-style:normal;opacity:0.7;}
+  .batch-field input{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:7px 8px;font-size:13px;font-family:inherit;
+  }
+
+  /* goal metrics */
+  .purpose-picker{margin-bottom:14px;}
+  .goal-metrics{display:flex;flex-direction:column;gap:12px;margin-bottom:18px;}
+  .goalmetric-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;
+  }
+  .goalmetric-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+  .goalmetric-name{font-size:13px;font-weight:600;}
+  .goalmetric-target{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-dim);}
+  .goalmetric-target input{
+    width:90px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;
+  }
+  .goalmetric-vals{display:flex;gap:16px;font-size:12px;color:var(--ink-dim);margin-bottom:8px;}
+  .goalmetric-vals .lime{color:var(--lime);}
+  .goalmetric-add{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .goalmetric-add input{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;
+  }
+  .goalmetric-note{font-size:11px;color:var(--ink-dim);margin-top:8px;font-style:italic;}
+  .ach-wrap{margin-bottom:10px;}
+  .ach-head{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-dim);margin-bottom:5px;}
+  .ach-pct{color:var(--lime);font-size:13px;}
+  .ach-bar-track{height:8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;}
+  .ach-bar-fill{height:100%;background:var(--lime);border-radius:999px;transition:width .3s ease;}
+  .ach-empty{font-size:11px;color:var(--ink-dim);margin-bottom:10px;}
+  .corewhy-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-bottom:18px;
+  }
+  .corewhy-q{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-dim);margin-bottom:12px;}
+  .corewhy-q textarea{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:8px;font-size:13px;font-family:inherit;resize:vertical;
+  }
+
+  /* karte profile / bodymap */
+  .karte-profile{margin-bottom:16px;}
+  .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .profile-grid label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--ink-dim);}
+  .profile-grid textarea{
+    background:var(--surface);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:10px;font-size:13px;font-family:inherit;resize:vertical;
+  }
+  @media (max-width:600px){ .profile-grid{grid-template-columns:1fr;} }
+  .karte-bodymap-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-bottom:16px;
+  }
+  .karte-bodymap{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .bodymap-toggle{margin-bottom:4px;}
+  .bodymap-svg{background:var(--surface-2);border-radius:8px;}
+  .bodymap-dot{fill:var(--surface);stroke:var(--ink-dim);stroke-width:1;cursor:pointer;}
+  .bodymap-dot:hover{stroke:var(--lime);}
+  .bodymap-dot.active{fill:var(--flame);stroke:var(--flame);}
+  .bodymap-hint{font-size:11px;color:var(--ink-dim);}
+  .karte-points{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .painpoint-chip{
+    background:var(--surface-2);border:1px solid var(--flame);border-radius:8px;
+    padding:8px 10px;min-width:180px;flex:1;
+  }
+  .painpoint-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .painpoint-label{font-size:12px;color:var(--flame);font-weight:600;}
+  .painpoint-vas{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-dim);margin-bottom:6px;}
+  .painpoint-vas input[type="range"]{flex:1;accent-color:var(--flame);}
+  .vas-val{width:18px;text-align:right;}
+  .painpoint-note{
+    width:100%;background:var(--surface);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;
+  }
+  .karte-row-wrap{margin-bottom:6px;}
+  .karte-pain-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;padding-left:4px;}
+  .pain-tag{
+    font-size:10px;background:color-mix(in srgb, var(--flame) 15%, transparent);color:var(--flame);
+    border:1px solid var(--flame);border-radius:6px;padding:3px 7px;display:inline-flex;align-items:center;gap:6px;
+  }
+  .pain-tag .del-row{font-size:11px;padding:0;color:var(--flame);}
+
+  .surgery-card{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+  .surgery-card h4{font-size:12px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;}
+  .surgery-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+  .surgery-row{
+    display:flex;align-items:center;gap:10px;font-size:12px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;
+  }
+  .surgery-desc{flex:1;}
+  .surgery-rehab{font-size:10px;padding:2px 7px;border-radius:6px;border:1px solid var(--line);color:var(--ink-dim);}
+  .surgery-rehab.rehab-ok{color:var(--lime);border-color:var(--lime);}
+  .surgery-rehab.rehab-no{color:var(--flame);border-color:var(--flame);}
+  .surgery-add{display:flex;gap:6px;flex-wrap:wrap;}
+  .surgery-add input, .surgery-add select{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;
+  }
+  .surgery-add input[type="text"]{flex:1;min-width:160px;}
+
+  .painlog-save{display:flex;gap:8px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+  .painlog-save input{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;
+  }
+  .painlog-history{margin-top:14px;}
+  .painlog-month{margin-bottom:10px;}
+  .painlog-month h4{font-size:11px;color:var(--ink-dim);margin:0 0 6px;}
+  .painlog-entries{display:flex;flex-wrap:wrap;gap:6px;}
+
+  /* care monthly check */
+  .care-monthly-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-bottom:18px;
+  }
+  .care-monthly-head{margin-bottom:10px;}
+  .care-monthly-head input{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:7px 10px;font-size:13px;font-family:inherit;
+  }
+  .care-pct{font-size:10px;color:var(--ink-dim);}
+
+  /* checklist */
+  .checklist-card{
+    background:var(--surface);border:1px solid var(--lime-dim);border-radius:var(--radius);
+    padding:16px;margin-bottom:18px;
+  }
+  .checklist-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .cl-tab{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink-dim);
+    padding:7px 12px;border-radius:999px;font-size:12px;cursor:pointer;
+  }
+  .cl-tab.active{border-color:var(--lime);color:var(--ink);background:color-mix(in srgb, var(--lime) 10%, transparent);}
+  .cl-summary{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink-dim);margin-bottom:12px;}
+  .cl-summary .lime{color:var(--lime);}
+  .cl-warn{color:var(--flame);font-style:normal;}
+  .cl-items{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+  .cl-item{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;
+  }
+  .cl-item-label{flex:1;font-size:12px;min-width:160px;}
+  .cl-item-max, .cl-item-score{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink-dim);}
+  .cl-item-scale select{
+    width:auto;min-width:140px;background:var(--surface);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:5px 6px;font-size:12px;font-family:inherit;
+  }
+  .cl-item-max input, .cl-item-score input{
+    width:56px;background:var(--surface);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:5px 6px;font-size:12px;font-family:inherit;
+  }
+  .cl-add-item{margin-bottom:12px;}
+  .cl-save-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+  .cl-save-row input{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:7px 10px;font-size:12px;font-family:inherit;
+  }
+  .cl-history{display:flex;flex-direction:column;gap:6px;}
+  .cl-hist-row{
+    display:flex;align-items:center;gap:12px;font-size:12px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+  }
+
+  /* diet */
+  .diet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .diet-grid label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--ink-dim);}
+  .diet-grid input, .diet-grid select{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:7px 9px;font-size:13px;font-family:inherit;
+  }
+  .diet-checks{display:flex;gap:10px;flex-wrap:wrap;}
+  .chip-check{flex-direction:row!important;align-items:center;gap:5px!important;font-size:12px;}
+  .diet-row{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px 14px;margin-bottom:8px;
+  }
+  .diet-row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .diet-row-tags{display:flex;flex-wrap:wrap;gap:6px;}
+  .diet-tag{
+    font-size:10px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-dim);
+    padding:3px 8px;border-radius:6px;
+  }
+  .diet-memo{font-size:12px;color:var(--ink);margin-top:6px;}
+
+  footer.note{margin-top:24px;font-size:11px;color:var(--ink-dim);line-height:1.7;border-top:1px solid var(--line);padding-top:12px;}
+  .save-tick{position:fixed;bottom:16px;right:16px;background:var(--surface-2);border:1px solid var(--lime);
+    color:var(--lime);font-size:11px;padding:8px 14px;border-radius:999px;opacity:0;
+    transition:opacity .3s ease;font-family:"SFMono-Regular",monospace;pointer-events:none;}
+  .save-tick.show{opacity:1;}
+
+  @media (max-width:520px){
+    .week-head .title .big{font-size:26px;}
+    header.top h1{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <span class="mark">P.S.</span>
+      <h1 class="display">パーソナルシート</h1>
+    </div>
+    <div class="header-right">
+      <div class="sub">個別トレーニングプログラム ｜ 進捗トラッカー</div>
+      <div class="theme-picker" id="themePicker"></div>
+    </div>
+  </header>
+
+  <div class="tabbar" id="tabbar"></div>
+  <div class="tabbar tabbar-2" id="tabbar2"></div>
+
+  <div id="weeks-container"></div>
+
+  <section class="panel" id="panel-cardio">
+    <div class="week-head">
+      <div class="title">
+        <span class="big display">有酸素</span>
+        <span class="days">トレーニング記録</span>
+      </div>
+    </div>
+    <div class="cardio-monthly" id="cardio-monthly"></div>
+    <div class="cardio-form" id="cardio-form"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>日付</th><th>種目</th><th>時間(分)</th><th>距離(km)</th><th>平均心拍</th><th>メモ</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="cardio-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-medical">
+    <div class="week-head">
+      <div class="title">
+        <span class="big display">メディカルデータ</span>
+        <span class="days">数値を記録するとグラフになります</span>
+      </div>
+      <button class="add-row" id="add-metric-btn" style="margin:0;">＋ 指標を追加</button>
+    </div>
+    <div class="goal-pinned-card">
+      <h3 class="metric-section-title">🎯 目標設定で選択中の項目</h3>
+      <div id="goal-pinned"></div>
+    </div>
+    <div class="lesch-card">
+      <h3 class="metric-section-title">レッシュ理論（足型・重心）</h3>
+      <div class="lesch-widget" id="lesch-widget"></div>
+    </div>
+    <div class="checklist-card">
+      <div class="batch-head">
+        <h3 class="metric-section-title">詳細チェックリスト（上肢・下肢・筋力・柔軟・睡眠）</h3>
+        <span class="batch-hint">項目ごとに採点すると、自動で小計され下のメディカルチェック／睡眠チェックに反映されます。配点はその場で編集できます。</span>
+      </div>
+      <div class="checklist-tabs" id="checklist-tabs"></div>
+      <div class="checklist-body" id="checklist-body"></div>
+    </div>
+    <div class="batch-card">
+      <div class="batch-head">
+        <h3 class="metric-section-title">測定セッションをまとめて入力</h3>
+        <span class="batch-hint">現場での手入力を1回で完了 — 空欄の項目は保存されません</span>
+      </div>
+      <div class="batch-body" id="batch-body"></div>
+    </div>
+    <div class="metric-grid" id="metric-grid"></div>
+  </section>
+
+  <section class="panel" id="panel-annual">
+    <div class="week-head">
+      <div class="title">
+        <span class="big display">年間データ</span>
+        <span class="days">折れ線グラフで変化を可視化</span>
+      </div>
+    </div>
+    <div class="annual-goal-card">
+      <h3 class="metric-section-title">🎯 目標設定の達成率</h3>
+      <div id="annual-goal-body"></div>
+    </div>
+    <div class="annual-controls" id="annual-controls"></div>
+    <div class="annual-chart-wrap" id="annual-chart"></div>
+    <div class="annual-stats" id="annual-stats"></div>
+  </section>
+
+  <section class="panel" id="panel-goals">
+    <div class="week-head">
+      <div class="title">
+        <span class="big display">目標設定</span>
+      </div>
+    </div>
+    <div class="purpose-picker" id="purpose-picker"></div>
+    <div class="goal-metrics" id="goal-metrics"></div>
+    <div class="corewhy-card" id="corewhy-card"></div>
+    <div class="goals-grid" id="goals-grid"></div>
+  </section>
+
+  <section class="panel" id="panel-diet">
+    <div class="week-head">
+      <div class="title">
+        <span class="big display">食事</span>
+        <span class="days">食事・水分・生活習慣の記録</span>
+      </div>
+    </div>
+    <div class="diet-form" id="diet-form"></div>
+    <div class="diet-list" id="diet-list"></div>
+  </section>
+
+  <section class="panel" id="panel-karte">
+    <div class="week-head">
+      <div class="title">
+        <span class="big display">カルテ</span>
+        <span class="days">簡易記録</span>
+      </div>
+    </div>
+    <div class="karte-profile" id="karte-profile"></div>
+    <div class="karte-bodymap-card">
+      <h3 class="metric-section-title">痛み・不安の記録（月ごとに保存）</h3>
+      <div class="karte-bodymap" id="karte-bodymap"></div>
+      <div class="karte-points" id="karte-points"></div>
+      <div class="painlog-save" id="painlog-save"></div>
+      <div class="painlog-history" id="painlog-history"></div>
+    </div>
+    <div class="karte-form" id="karte-form"></div>
+    <div class="karte-list" id="karte-list"></div>
+  </section>
+
+
+  <section class="panel" id="panel-care">
+    <div class="week-head">
+      <div class="title">
+        <span class="big display">ケア＆ストレッチ</span>
+      </div>
+    </div>
+    <div class="care-monthly-card">
+      <h3 class="metric-section-title">月間チェック</h3>
+      <div class="care-monthly" id="care-monthly"></div>
+    </div>
+    <div class="care-groups" id="care-groups"></div>
+  </section>
+
+  <footer class="note">
+    種目・重さ・回数はタップして編集できます。実施チェック表の各マスをタップすると「未記録 → 取り組めた（○）→ 取り組めていない（✕）」の順に切り替わり、入力内容はこの端末に自動保存されます。<br>
+    ＜ケア＆ストレッチ＞はトレーナーが選定した参考メニューです。個人で変更しないようにしてください。
+  </footer>
+</div>
+<div class="save-tick" id="saveTick">保存しました</div>
+
+<div class="video-modal" id="videoModal">
+  <div class="box">
+    <div class="box-head">
+      <span>動画プレビュー</span>
+      <button id="closeModal">×</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<style>
+  .member-badge{
+    position:fixed;top:10px;right:10px;z-index:60;
+    background:#1F2B22;border:1px solid #4C8F34;color:#EAF0E6;
+    font-size:11px;padding:6px 10px;border-radius:999px;
+    display:flex;align-items:center;gap:6px;font-family:-apple-system,sans-serif;
+    box-shadow:0 2px 8px rgba(0,0,0,0.3);
+  }
+  .member-badge button{
+    background:#6CC24A;color:#10150F;border:none;border-radius:999px;
+    padding:2px 8px;font-size:10px;cursor:pointer;font-weight:600;
+  }
+  .member-badge button.secondary{background:#28352C;color:#EAF0E6;border:1px solid #4C8F34;}
+  .sync-badge{
+    position:fixed;top:10px;left:10px;z-index:60;font-size:10px;
+    color:#8CA292;font-family:"SFMono-Regular",monospace;
+    background:#1F2B22;border:1px solid #28352C;padding:4px 8px;border-radius:6px;
+  }
+  .member-list-modal{
+    display:none;position:fixed;inset:0;background:rgba(10,11,13,0.85);
+    z-index:70;align-items:center;justify-content:center;padding:20px;
+    font-family:-apple-system,sans-serif;
+  }
+  .member-list-modal.show{display:flex;}
+  .member-list-box{
+    width:100%;max-width:360px;background:#171F19;border:1px solid #28352C;
+    border-radius:12px;overflow:hidden;max-height:80vh;display:flex;flex-direction:column;
+  }
+  .member-list-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 16px;border-bottom:1px solid #28352C;color:#EAF0E6;font-size:14px;font-weight:600;
+  }
+  .member-list-head button{background:none;border:none;color:#8CA292;font-size:18px;cursor:pointer;}
+  .member-list-body{overflow-y:auto;padding:8px;}
+  .member-list-item{
+    display:block;width:100%;text-align:left;background:#1F2B22;border:1px solid #28352C;
+    color:#EAF0E6;border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;cursor:pointer;
+  }
+  .member-list-item:hover{border-color:#6CC24A;}
+  .member-list-item.current{border-color:#6CC24A;color:#6CC24A;}
+  .member-list-empty{color:#8CA292;font-size:12px;padding:20px;text-align:center;}
+  .member-list-add{
+    display:flex;gap:6px;padding:10px 12px;border-top:1px solid #28352C;
+  }
+  .member-list-add input{
+    flex:1;background:#1F2B22;border:1px solid #28352C;color:#EAF0E6;
+    border-radius:6px;padding:8px 10px;font-size:12px;font-family:inherit;
+  }
+  .member-list-add button{
+    background:#6CC24A;color:#10150F;border:none;border-radius:6px;
+    padding:8px 12px;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap;
+  }
+</style>
+<script>
+/* =========================================================
+   共有バックエンド接続ブリッジ（Google Apps Script + スプレッドシート）
+   ---------------------------------------------------------
+   下の SCRIPT_URL を、あなたが発行したApps ScriptのURLに
+   書き換えてください。書き換えるまではローカル保存のみで動作します。
+   ========================================================= */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8jVLabSCXDjju-jZpfP-0Hz720RJumG7g0Xp7o8yUvYk-QsWraYBxYiBVudFJv-nOwQ/exec";
+
+const SYNC_ENABLED = SCRIPT_URL.indexOf("https://") === 0;
+
+function getMemberId(){
+  const urlParam = new URLSearchParams(location.search).get("member");
+  if(urlParam){
+    localStorage.setItem("ps-member-id", urlParam);
+    return urlParam;
+  }
+  let id = localStorage.getItem("ps-member-id");
+  if(!id){
+    id = prompt("お名前またはIDを入力してください（次回から自動で使われます）", "");
+    if(!id) id = "guest-" + Math.random().toString(36).slice(2,6);
+    localStorage.setItem("ps-member-id", id);
+  }
+  return id;
+}
+const MEMBER_ID = SYNC_ENABLED ? getMemberId() : "local";
+
+function scopedKey(key, shared){
+  if(shared) return "shared::" + key;
+  return "member::" + MEMBER_ID + "::" + key;
+}
+
+if(SYNC_ENABLED){
+  window.storage = {
+    async get(key, shared){
+      const k = scopedKey(key, shared);
+      const res = await fetch(`${SCRIPT_URL}?action=get&key=${encodeURIComponent(k)}`);
+      const data = await res.json();
+      if(!data.found) throw new Error("not found: "+k);
+      return {key, value: data.value, shared: !!shared};
+    },
+    async set(key, value, shared){
+      const k = scopedKey(key, shared);
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: {"Content-Type":"text/plain;charset=utf-8"}, // プリフライトを避けるため text/plain で送信
+        body: JSON.stringify({action:"set", key:k, value})
+      });
+      const data = await res.json();
+      if(data.error) throw new Error(data.error);
+      return {key, value, shared: !!shared};
+    },
+    async delete(key, shared){
+      const k = scopedKey(key, shared);
+      await fetch(SCRIPT_URL, {
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body: JSON.stringify({action:"delete", key:k})
+      });
+      return {key, deleted:true, shared: !!shared};
+    },
+    async list(prefix, shared){
+      const p = scopedKey(prefix||"", shared);
+      const res = await fetch(`${SCRIPT_URL}?action=list&prefix=${encodeURIComponent(p)}`);
+      const data = await res.json();
+      return {keys: (data.keys||[]).map(k=>k.split("::").slice(2).join("::")), prefix, shared: !!shared};
+    }
+  };
+}
+
+/* 会員一覧：バックエンドに保存されている全会員IDをmember::プレフィックスから抽出する */
+async function fetchAllMemberIds(){
+  const res = await fetch(`${SCRIPT_URL}?action=list&prefix=${encodeURIComponent("member::")}`);
+  const data = await res.json();
+  const ids = (data.keys||[]).map(k=>{
+    const parts = k.split("::");
+    return parts.length>=2 ? parts[1] : null;
+  }).filter(Boolean);
+  return Array.from(new Set(ids)).sort();
+}
+
+function switchToMember(id){
+  localStorage.setItem("ps-member-id", id);
+  location.href = location.pathname + "?member=" + encodeURIComponent(id);
+}
+
+async function openMemberListModal(){
+  const modal = document.getElementById("memberListModal");
+  const body = document.getElementById("memberListBody");
+  modal.classList.add("show");
+  body.innerHTML = `<div class="member-list-empty">読み込み中…</div>`;
+  try{
+    const ids = await fetchAllMemberIds();
+    if(ids.length===0){
+      body.innerHTML = `<div class="member-list-empty">まだ登録された会員がいません</div>`;
+      return;
+    }
+    body.innerHTML = ids.map(id=>`
+      <button class="member-list-item ${id===MEMBER_ID ? 'current' : ''}" data-member-id="${id}">
+        ${id}${id===MEMBER_ID ? '（現在表示中）' : ''}
+      </button>
+    `).join("");
+    body.querySelectorAll("[data-member-id]").forEach(btn=>{
+      btn.addEventListener("click", ()=> switchToMember(btn.dataset.memberId));
+    });
+  }catch(e){
+    body.innerHTML = `<div class="member-list-empty">読み込みに失敗しました。SCRIPT_URLの設定をご確認ください。</div>`;
+  }
+}
+
+window.addEventListener("DOMContentLoaded", ()=>{
+  const sync = document.createElement("div");
+  sync.className = "sync-badge";
+  sync.textContent = SYNC_ENABLED ? "🟢 同期モード" : "⚪ ローカル保存のみ（SCRIPT_URL未設定）";
+  document.body.appendChild(sync);
+
+  if(SYNC_ENABLED){
+    const badge = document.createElement("div");
+    badge.className = "member-badge";
+    badge.innerHTML = `会員: <b>${MEMBER_ID}</b> <button id="switch-member" class="secondary">切替</button> <button id="open-member-list">会員一覧</button>`;
+    document.body.appendChild(badge);
+    badge.querySelector("#switch-member").addEventListener("click", ()=>{
+      const id = prompt("表示する会員のお名前またはIDを入力してください", MEMBER_ID);
+      if(id) switchToMember(id);
+    });
+    badge.querySelector("#open-member-list").addEventListener("click", openMemberListModal);
+
+    const modal = document.createElement("div");
+    modal.className = "member-list-modal";
+    modal.id = "memberListModal";
+    modal.innerHTML = `
+      <div class="member-list-box">
+        <div class="member-list-head">
+          <span>会員一覧</span>
+          <button id="closeMemberList">×</button>
+        </div>
+        <div class="member-list-body" id="memberListBody"></div>
+        <div class="member-list-add">
+          <input type="text" id="newMemberInput" placeholder="新しい会員のID・お名前">
+          <button id="newMemberBtn">切替</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById("closeMemberList").addEventListener("click", ()=> modal.classList.remove("show"));
+    modal.addEventListener("click",(e)=>{ if(e.target===modal) modal.classList.remove("show"); });
+    document.getElementById("newMemberBtn").addEventListener("click", ()=>{
+      const id = document.getElementById("newMemberInput").value.trim();
+      if(id) switchToMember(id);
+    });
+  }
+});
+</script>
+
+<script>
+function daysInMonth(monthKey){
+  const [y,m] = monthKey.split("-").map(Number);
+  return new Date(y, m, 0).getDate();
+}
+function monthLabel(monthKey){
+  const [y,m] = monthKey.split("-").map(Number);
+  return `${y}年${m}月`;
+}
+function currentMonthKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+function monthDays(monthKey){
+  const n = daysInMonth(monthKey);
+  return Array.from({length:n}, (_,i)=>i+1);
+}
+
+const CARE_LIBRARY = [
+  {group:"ウォームアップ（週1）", items:[
+    {id:"c1-1", name:"ストレッチポール リブゲージ", time:"-"},
+    {id:"c1-2", name:"ストレッチポール シングルアーム", time:"-"},
+    {id:"c1-3", name:"ストレッチポール エクスターナル", time:"-"},
+    {id:"c1-4", name:"ボールスパイン", time:"-"},
+    {id:"c1-5", name:"90-90オープンチェスト", time:"10回"},
+    {id:"c1-6", name:"90-90オープンチェスト360", time:"10回"},
+    {id:"c1-7", name:"スコーピオン", time:"10回"},
+    {id:"c1-8", name:"シンボックス", time:"10往復"},
+    {id:"c1-9", name:"SLR", time:"40秒×3"},
+    {id:"c1-10", name:"ヒップリフト", time:"40秒×3"},
+  ]},
+  {group:"トリガーポイント（週3）", items:[
+    {id:"c2-1", name:"グリッド スパイン", time:"30秒", who:"背中が硬い人"},
+    {id:"c2-2", name:"グリッド クワッド", time:"30秒", who:"もも前が硬い人"},
+    {id:"c2-3", name:"グリッド ラテラル", time:"30秒", who:"もも横が硬い人"},
+    {id:"c2-4", name:"グリッド ガストロ", time:"30秒", who:"ふくらはぎが硬い人"},
+    {id:"c2-5", name:"グリッド ラット", time:"30秒", who:"肩が硬い人"},
+    {id:"c2-6", name:"グリッド プローン", time:"30秒", who:"腰が硬い人"},
+    {id:"c2-7", name:"グリッド 首", time:"30秒", who:"頭痛がする人"},
+    {id:"c2-8", name:"グリッド 腕", time:"30秒", who:"腕が上がりにくい人"},
+    {id:"c2-9", name:"グリッド 腕②", time:"30秒", who:"腕が上がりにくい人"},
+    {id:"c2-10", name:"グリッド 胸", time:"30秒", who:"腕が上がりにくい人"},
+    {id:"c2-11", name:"グリッド 腰", time:"30秒", who:"足が重だるくなる人"},
+    {id:"c2-12", name:"グリッド スネ", time:"30秒", who:"足首が硬い人"},
+    {id:"c2-13", name:"グリッド 内転", time:"30秒", who:"膝が痛い人"},
+    {id:"c2-14", name:"グリッド ハム", time:"30秒", who:"腰が痛い人"},
+    {id:"c2-15", name:"グリッド 足底", time:"30秒", who:"膝が痛い人"},
+    {id:"c2-16", name:"グリッド 臀部", time:"30秒", who:"腰が痛い人"},
+  ]},
+  {group:"ボール／呼吸（週4）", items:[
+    {id:"c3-1", name:"ボール スパイン", time:"30秒", who:"腰が痛い人"},
+    {id:"c3-2", name:"ボール クワッド", time:"30秒", who:"もも前が硬い人"},
+    {id:"c3-3", name:"ボール ラテラル", time:"30秒", who:"もも横が硬い人"},
+    {id:"c3-4", name:"ボール インナー", time:"30秒", who:"もも内が硬い人"},
+    {id:"c3-5", name:"ボール ガストロ", time:"30秒", who:"ふくらはぎが硬い人"},
+    {id:"c3-6", name:"ボール ソール", time:"30秒", who:"足裏が硬い人"},
+    {id:"c3-7", name:"ブレッシング", time:"60秒", who:"呼吸が40秒以下だった人"},
+  ]},
+  {group:"ストレッチ（週5）", items:[
+    {id:"c4-1", name:"90-90グルト", time:"40秒", who:"お尻が硬い人"},
+    {id:"c4-2", name:"ハムストレッチ", time:"40秒", who:"もも裏が硬い人"},
+    {id:"c4-3", name:"ガストロストレッチ", time:"40秒", who:"ふくらはぎが硬い人"},
+    {id:"c4-4", name:"クワッドストレッチ", time:"40秒", who:"もも前が硬い人"},
+    {id:"c4-5", name:"ラテラルストレッチ", time:"40秒", who:"もも横が硬い人"},
+    {id:"c4-6", name:"クランチストレッチ", time:"40秒", who:"お腹が硬い人"},
+    {id:"c4-7", name:"ラテラルベントストレッチ", time:"40秒", who:"横腹が硬い人"},
+    {id:"c4-8", name:"ソアスストレッチ", time:"40秒", who:"股関節が硬い人"},
+    {id:"c4-9", name:"トライセプスストレッチ", time:"40秒", who:"二の腕が硬い人"},
+    {id:"c4-10", name:"チェストストレッチ", time:"40秒", who:"胸が硬い人"},
+    {id:"c4-11", name:"ネックストレッチ①", time:"40秒", who:"首が硬い人"},
+    {id:"c4-12", name:"ネックストレッチ②", time:"40秒", who:"首が硬い人"},
+  ]},
+];
+
+const CARDIO_TYPES = ["ウォーキング","ランニング","バイク","エリプティカル","水泳","その他"];
+
+const STORAGE_KEY = "personal-sheet-program-v1";
+let state = null;
+
+const CATEGORY_LABELS = {
+  tanita: "① TANITA計測",
+  medical: "② メディカルチェック",
+  sleep: "③ 睡眠チェック",
+  fitness: "体力測定",
+  goal: "その他（体組成・活動）",
+  other: "その他（バイタル）",
+};
+const DEFAULT_METRICS = [
+  // ① TANITA計測
+  {id:"weight", name:"体重", unit:"kg", category:"tanita"},
+  {id:"leanmass", name:"除脂肪量", unit:"kg", category:"tanita"},
+  {id:"fatmass", name:"脂肪量", unit:"kg", category:"tanita"},
+  {id:"water", name:"水分量", unit:"%", category:"tanita"},
+  // ② メディカルチェック（合計66点）
+  {id:"med-upper", name:"上肢", unit:"点", category:"medical", max:22},
+  {id:"med-lower", name:"下肢", unit:"点", category:"medical", max:22},
+  {id:"med-strength", name:"筋力", unit:"点", category:"medical", max:16},
+  {id:"med-flex", name:"柔軟", unit:"点", category:"medical", max:6},
+  // ③ 睡眠チェック（合計45点）
+  {id:"sleep-phase", name:"位相", unit:"点", category:"sleep", max:15},
+  {id:"sleep-quality", name:"質", unit:"点", category:"sleep", max:15},
+  {id:"sleep-quantity", name:"量", unit:"点", category:"sleep", max:18},
+  // 体力測定（前回・前々回と比較）
+  {id:"height", name:"1. 身長", unit:"cm", category:"fitness"},
+  {id:"breath", name:"2. 呼吸（3回平均・最大60秒）", unit:"秒", category:"fitness"},
+  {id:"sitreach", name:"3. 長座体前屈", unit:"cm", category:"fitness"},
+  {id:"grip-r", name:"4. 握力（右）", unit:"kg", category:"fitness"},
+  {id:"grip-l", name:"5. 握力（左）", unit:"kg", category:"fitness"},
+  {id:"balance-open-r", name:"6. 開眼片足立ち（右）", unit:"秒", category:"fitness"},
+  {id:"balance-open-l", name:"7. 開眼片足立ち（左）", unit:"秒", category:"fitness"},
+  {id:"balance-closed-r", name:"8. 閉眼片足立ち（右）", unit:"秒", category:"fitness"},
+  {id:"balance-closed-l", name:"9. 閉眼片足立ち（左）", unit:"秒", category:"fitness"},
+  {id:"finger-nose", name:"10. 指鼻タッチ", unit:"点", category:"fitness", max:8},
+  {id:"finger-finger", name:"11. 指指タッチ", unit:"点", category:"fitness", max:5},
+  {id:"clap-r", name:"12. クラップ（右）", unit:"", category:"fitness", inputType:"symbol", options:["○","△","×"]},
+  {id:"clap-l", name:"13. クラップ（左）", unit:"", category:"fitness", inputType:"symbol", options:["○","△","×"]},
+  {id:"tap-r", name:"14. タップ（右）", unit:"", category:"fitness", inputType:"symbol", options:["○","△","×"]},
+  {id:"tap-l", name:"15. タップ（左）", unit:"", category:"fitness", inputType:"symbol", options:["○","△","×"]},
+  {id:"vor-r", name:"16. VOR（右）", unit:"", category:"fitness", inputType:"symbol", options:["○","△","×"]},
+  {id:"vor-l", name:"17. VOR（左）", unit:"", category:"fitness", inputType:"symbol", options:["○","△","×"]},
+  // その他（バイタル）
+  {id:"sbp", name:"収縮期血圧", unit:"mmHg", category:"other"},
+  {id:"dbp", name:"拡張期血圧", unit:"mmHg", category:"other"},
+  {id:"rhr", name:"安静時心拍数", unit:"bpm", category:"other"},
+  {id:"ehr", name:"運動時心拍数", unit:"bpm", category:"other"},
+  // 目標設定 専用指標
+  {id:"waist", name:"腹囲", unit:"cm", category:"goal"},
+  {id:"visits", name:"来館数", unit:"回", category:"goal"},
+  {id:"pushup", name:"腕立て伏せ（30秒）", unit:"回", category:"goal"},
+];
+const MEDICAL_TOTAL_GROUPS = [
+  {category:"medical", label:"メディカルチェック合計", ids:["med-upper","med-lower","med-strength","med-flex"], max:66},
+  {category:"sleep", label:"睡眠チェック合計", ids:["sleep-phase","sleep-quality","sleep-quantity"], max:48},
+];
+/* 詳細チェックリスト：各項目の配点(max)は元シートから完全には確定できなかったため
+   目安の初期値です。各項目の配点はその場で編集できます。 */
+const CHECKLIST_DEFS = {
+  upper: {
+    label:"上肢（可動域）", metricId:"med-upper", targetMax:22,
+    items:[
+      {id:"c1", label:"頸椎：前屈", max:1},
+      {id:"c2", label:"頸椎：後屈", max:1},
+      {id:"c3", label:"頸椎：右回旋", max:1},
+      {id:"c4", label:"頸椎：右側屈", max:1},
+      {id:"c5", label:"頸椎：右鎖骨", max:1},
+      {id:"c6", label:"頸椎：左回旋", max:1},
+      {id:"c7", label:"頸椎：左側屈", max:1},
+      {id:"c8", label:"頸椎：左鎖骨", max:1},
+      {id:"sc1", label:"肩甲骨：右", max:1},
+      {id:"sc2", label:"肩甲骨：左", max:1},
+      {id:"sh1", label:"肩関節：右→左肩甲骨上", max:1},
+      {id:"sh2", label:"肩関節：右→左肩甲骨下", max:1},
+      {id:"sh4", label:"肩関節：左→右肩甲骨上", max:1},
+      {id:"sh5", label:"肩関節：左→右肩甲骨下", max:1},
+      {id:"el1", label:"肘関節：右", max:1},
+      {id:"el2", label:"肘関節：左", max:1},
+    ]
+  },
+  lower: {
+    label:"下肢（可動域）", metricId:"med-lower", targetMax:22,
+    items:[
+      {id:"th1", label:"胸椎：右回旋", max:1},
+      {id:"th2", label:"胸椎：左回旋", max:1},
+      {id:"hip1", label:"股関節：右屈曲", max:1},
+      {id:"hip2", label:"股関節：右SLR", max:1},
+      {id:"hip3", label:"股関節：右前内", max:1},
+      {id:"hip4", label:"股関節：右前外", max:1},
+      {id:"hip5", label:"股関節：右後内", max:1},
+      {id:"hip6", label:"股関節：右後外", max:1},
+      {id:"hip7", label:"股関節：左屈曲", max:1},
+      {id:"hip8", label:"股関節：左SLR", max:1},
+      {id:"hip9", label:"股関節：左前内", max:1},
+      {id:"hip10", label:"股関節：左前外", max:1},
+      {id:"hip11", label:"股関節：左後内", max:1},
+      {id:"hip12", label:"股関節：左後外", max:1},
+      {id:"kn1", label:"膝関節：右膝窩", max:1},
+      {id:"kn2", label:"膝関節：右内旋", max:1},
+      {id:"kn3", label:"膝関節：左膝窩", max:1},
+      {id:"kn4", label:"膝関節：左内旋", max:1},
+      {id:"an1", label:"足関節：右", max:1},
+      {id:"an2", label:"足関節：左", max:1},
+    ]
+  },
+  strength: {
+    label:"筋力", metricId:"med-strength", targetMax:16,
+    items:[
+      {id:"st1", label:"体幹", max:4},
+      {id:"st2", label:"上肢（筋力）", max:4},
+      {id:"st3", label:"下肢：右", max:4},
+      {id:"st4", label:"下肢：左", max:4},
+    ]
+  },
+  flex: {
+    label:"柔軟性", metricId:"med-flex", targetMax:6,
+    items:[
+      {id:"fl1", label:"前屈", max:3},
+      {id:"fl2", label:"後屈", max:3},
+    ]
+  },
+  sleepPhase: {
+    label:"位相", metricId:"sleep-phase", targetMax:15,
+    items:[
+      {id:"sp1", label:"就寝時刻の一定性（平日・休日問わず）", max:3},
+      {id:"sp2", label:"起床時刻の一定性（平日・休日問わず）", max:3},
+      {id:"sp3", label:"朝食を毎日きちんと摂っている", max:3},
+      {id:"sp4", label:"「朝型」である", max:3},
+      {id:"sp5", label:"起床時間", max:3, type:"scale", scale:[
+        {label:"6時より前", value:3},
+        {label:"6:30頃", value:2},
+        {label:"7時頃", value:1},
+        {label:"7:30頃", value:0},
+      ]},
+    ]
+  },
+  sleepQuality: {
+    label:"質", metricId:"sleep-quality", targetMax:15,
+    items:[
+      {id:"sq1", label:"入眠困難（30分以上寝つけない）", max:3},
+      {id:"sq2", label:"中途覚醒（夜中に2回以上目が覚める）", max:3},
+      {id:"sq3", label:"早朝覚醒（予定より2時間以上早く目覚める）", max:3},
+      {id:"sq4", label:"深く眠れた感じがしない", max:3},
+      {id:"sq5", label:"眠れないことへの不安", max:3},
+    ]
+  },
+  sleepQuantity: {
+    label:"量", metricId:"sleep-quantity", targetMax:18,
+    items:[
+      {id:"sn1", label:"平日の睡眠時間が6時間未満", max:3},
+      {id:"sn2", label:"本当はもっと寝たいが取れていない", max:3},
+      {id:"sn3", label:"起床直後の強い眠気・疲労感", max:3},
+      {id:"sn4", label:"午前中や夕方の眠気", max:3},
+      {id:"sn5", label:"居眠り・うたた寝をする", max:3},
+    ]
+  },
+};
+const GOAL_PURPOSES = {
+  diet: {label:"ダイエット目的", items:[
+    {metricId:"leanmass", label:"① 除脂肪量"},
+    {metricId:"fatmass", label:"② 脂肪量"},
+    {metricId:"waist", label:"③ 腹囲"},
+  ]},
+  health: {label:"健康目的", items:[
+    {metricId:"visits", label:"① 来館数"},
+    {metricId:"__sleep_total__", label:"② 睡眠点数（/45）"},
+    {metricId:"__cardio_total__", label:"③ 有酸素運動（月合計・分）"},
+  ]},
+  performance: {label:"パフォーマンスアップ目的", items:[
+    {metricId:"grip-r", label:"① 握力：右"},
+    {metricId:"grip-l", label:"② 握力：左"},
+    {metricId:"pushup", label:"③ 腕立て伏せ（30秒）"},
+  ]},
+};
+const CORE_WHY_QUESTIONS = [
+  {id:"why", q:"なぜ身体を変えたいか"},
+  {id:"change", q:"達成すると何が変わるか"},
+  {id:"forwhom", q:"誰のためにがんばるか"},
+  {id:"ifnot", q:"達成できなかったらどうなるか"},
+  {id:"true", q:"本当にかなえたいことは"},
+];
+const BODY_REGIONS = [
+  {id:"head", label:"頭部", x:50, y:7, view:"both"},
+  {id:"neck", label:"首", x:50, y:15, view:"both"},
+  {id:"shoulder-r", label:"右肩", x:33, y:21, view:"both"},
+  {id:"shoulder-l", label:"左肩", x:67, y:21, view:"both"},
+  {id:"chest", label:"胸", x:50, y:27, view:"front"},
+  {id:"upperback", label:"背中上部", x:50, y:25, view:"back"},
+  {id:"elbow-r", label:"右肘", x:22, y:38, view:"both"},
+  {id:"elbow-l", label:"左肘", x:78, y:38, view:"both"},
+  {id:"wrist-r", label:"右手首", x:15, y:49, view:"both"},
+  {id:"wrist-l", label:"左手首", x:85, y:49, view:"both"},
+  {id:"abdomen", label:"腹部", x:50, y:39, view:"front"},
+  {id:"lowerback", label:"腰", x:50, y:44, view:"back"},
+  {id:"hip-r", label:"右股関節", x:41, y:52, view:"both"},
+  {id:"hip-l", label:"左股関節", x:59, y:52, view:"both"},
+  {id:"thigh-r", label:"右太もも", x:41, y:63, view:"both"},
+  {id:"thigh-l", label:"左太もも", x:59, y:63, view:"both"},
+  {id:"knee-r", label:"右膝", x:41, y:75, view:"both"},
+  {id:"knee-l", label:"左膝", x:59, y:75, view:"both"},
+  {id:"calf-r", label:"右ふくらはぎ", x:41, y:85, view:"both"},
+  {id:"calf-l", label:"左ふくらはぎ", x:59, y:85, view:"both"},
+  {id:"ankle-r", label:"右足首", x:41, y:95, view:"both"},
+  {id:"ankle-l", label:"左足首", x:59, y:95, view:"both"},
+];
+const LESCH_POSITIONS = {
+  "cross-1": {x:38, y:30, label:"クロスタイプ ／ 1タイプ：やや前方・内側寄り"},
+  "cross-2": {x:62, y:60, label:"クロスタイプ ／ 2タイプ：やや後方・外側寄り"},
+  "parallel-1": {x:50, y:28, label:"パラレルタイプ ／ 1タイプ：中央やや前方"},
+  "parallel-2": {x:50, y:64, label:"パラレルタイプ ／ 2タイプ：中央やや後方"},
+};
+const WATER_OPTIONS = ["500ml以下","500〜1000ml","1000〜1500ml","1500〜2000ml","2000〜2500ml","2500ml以上"];
+const RICE_OPTIONS = ["100g以下","100〜150g","150〜200g","200〜250g","250〜300g","300g以上"];
+const MEAL_TIME_OPTIONS = ["朝食","昼食","夕食"];
+const CONDITIONS = [
+  {id:"great", label:"絶好調", color:"#6CC24A"},
+  {id:"good", label:"良好", color:"#9FD46A"},
+  {id:"normal", label:"普通", color:"#C9C97A"},
+  {id:"low", label:"やや不調", color:"#E9A24A"},
+  {id:"bad", label:"不調", color:"#FF6B47"},
+];
+const THEME_PRESETS = [
+  {name:"ターフグリーン", accent:"#6CC24A", dim:"#4C8F34"},
+  {name:"ミント", accent:"#3FD9A4", dim:"#2AA37B"},
+  {name:"オリーブ", accent:"#A6C24A", dim:"#7B9433"},
+  {name:"ライム", accent:"#C6F135", dim:"#8CA426"},
+  {name:"アクア", accent:"#4AC2C2", dim:"#348F8F"},
+];
+
+function defaultState(){
+  const mk = currentMonthKey();
+  const months = {};
+  months[mk] = { exercises: [ blankExercise(), blankExercise(), blankExercise() ] };
+  return {
+    months, monthOrder: [mk],
+    careVideos:{}, careChecks:{}, cardio:[],
+    medical: { metrics: DEFAULT_METRICS.map(m=>({...m})), records: [], lesch: {axis:"cross", type:"1"} },
+    checklists: { defs: JSON.parse(JSON.stringify(CHECKLIST_DEFS)), records: [] },
+    diet: [],
+    goals: {
+      client: {goal:"", targetDate:"", note:""},
+      trainer: {assessment:"", plan:"", nextReview:""},
+      purposes: ["diet"],
+      targets: {},
+      coreWhy: {}
+    },
+    karte: [],
+    karteProfile: {history:"", allergies:"", surgeries:[]},
+    painRecords: {},
+    theme: {accent: THEME_PRESETS[0].accent, dim: THEME_PRESETS[0].dim}
+  };
+}
+function blankExercise(){
+  return {type:"ST", name:"", video:"", point:"", weight:"", reps:"", rest:"", rpe:"3", checks:{}};
+}
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY);
+    if(res && res.value){
+      state = JSON.parse(res.value);
+      if(!state.careVideos) state.careVideos = {};
+      if(!state.careChecks) state.careChecks = {};
+      if(!state.cardio) state.cardio = [];
+      if(!state.medical) state.medical = { metrics: DEFAULT_METRICS.map(m=>({...m})), records: [], lesch: {axis:"cross", type:"1"} };
+      if(!state.medical.lesch) state.medical.lesch = {axis:"cross", type:"1"};
+      state.medical.metrics.forEach(m=>{ if(!m.category) m.category = "other"; });
+      // remove metrics explicitly dropped from defaults
+      const removedIds = ["bodyfat", "balance-open"];
+      state.medical.metrics = state.medical.metrics.filter(m=>!removedIds.includes(m.id));
+      state.medical.records = state.medical.records.filter(r=>!removedIds.includes(r.metricId));
+      // sync category/max/inputType for known default metrics (schema fixes), add any new ones (keeps user-renamed name/unit + values intact)
+      DEFAULT_METRICS.forEach(dm=>{
+        const existing = state.medical.metrics.find(m=>m.id===dm.id);
+        if(existing){
+          existing.category = dm.category;
+          if(dm.max!==undefined) existing.max = dm.max;
+          if(dm.inputType!==undefined) existing.inputType = dm.inputType;
+          if(dm.options!==undefined) existing.options = dm.options;
+        } else {
+          state.medical.metrics.push({...dm});
+        }
+      });
+      // 体力測定の項目番号・順序を最新の並びに合わせる
+      const fitnessOrderIds = ["height","breath","sitreach","grip-r","grip-l","balance-open-r","balance-open-l","balance-closed-r","balance-closed-l","finger-nose","finger-finger","clap-r","clap-l","tap-r","tap-l","vor-r","vor-l"];
+      fitnessOrderIds.forEach(id=>{
+        const existing = state.medical.metrics.find(m=>m.id===id);
+        const def = DEFAULT_METRICS.find(m=>m.id===id);
+        if(existing && def) existing.name = def.name;
+      });
+      state.medical.metrics.sort((a,b)=>{
+        const ia = fitnessOrderIds.indexOf(a.id), ib = fitnessOrderIds.indexOf(b.id);
+        if(ia===-1 && ib===-1) return 0;
+        if(ia===-1) return 1;
+        if(ib===-1) return -1;
+        return ia-ib;
+      });
+      if(!state.checklists) state.checklists = { defs: JSON.parse(JSON.stringify(CHECKLIST_DEFS)), records: [] };
+      if(!state.checklists.defs) state.checklists.defs = JSON.parse(JSON.stringify(CHECKLIST_DEFS));
+      if(!state.checklists.records) state.checklists.records = [];
+      // remove items explicitly dropped from the checklist defs (kept out of scoring)
+      const removedChecklistItemIds = ["sh3","sh6"];
+      Object.values(state.checklists.defs).forEach(def=>{
+        def.items = def.items.filter(it=>!removedChecklistItemIds.includes(it.id));
+      });
+      state.checklists.records.forEach(r=>{
+        removedChecklistItemIds.forEach(id=> delete r.scores[id]);
+      });
+      // add any newly introduced checklist groups/items without touching what the user already configured
+      Object.keys(CHECKLIST_DEFS).forEach(gid=>{
+        if(!state.checklists.defs[gid]){
+          state.checklists.defs[gid] = JSON.parse(JSON.stringify(CHECKLIST_DEFS[gid]));
+        } else {
+          state.checklists.defs[gid].targetMax = CHECKLIST_DEFS[gid].targetMax;
+          CHECKLIST_DEFS[gid].items.forEach(defItem=>{
+            if(!state.checklists.defs[gid].items.find(it=>it.id===defItem.id)){
+              state.checklists.defs[gid].items.push({...defItem});
+            }
+          });
+        }
+      });
+      if(!state.diet) state.diet = [];
+      if(!state.goals) state.goals = {
+        client: {goal:"", targetDate:"", note:""},
+        trainer: {assessment:"", plan:"", nextReview:""}
+      };
+      if(!state.goals.purposes){
+        state.goals.purposes = state.goals.purpose ? [state.goals.purpose] : ["diet"];
+      }
+      if(!state.goals.targets) state.goals.targets = {};
+      if(!state.goals.coreWhy) state.goals.coreWhy = {};
+      if(!state.karte) state.karte = [];
+      if(!state.karteProfile) state.karteProfile = {history:"", allergies:"", surgeries:[]};
+      if(!state.karteProfile.surgeries) state.karteProfile.surgeries = [];
+      if(!state.painRecords) state.painRecords = {};
+      // migrate old per-visit painPoints (if any) into monthly pain records
+      state.karte.forEach(k=>{
+        if(k.painPoints && k.painPoints.length){
+          const mk = k.date.slice(0,7);
+          if(!state.painRecords[mk]) state.painRecords[mk] = [];
+          k.painPoints.forEach(p=>{
+            if(!state.painRecords[mk].find(x=>x.region===p.region)) state.painRecords[mk].push(p);
+          });
+        }
+        delete k.painPoints;
+      });
+      if(!state.theme) state.theme = {accent: THEME_PRESETS[0].accent, dim: THEME_PRESETS[0].dim};
+
+      // migrate old week-based training data (state.weeks) into month-based state.months
+      if(!state.months){
+        state.months = {};
+        state.monthOrder = [];
+        if(state.weeks){
+          const mk = currentMonthKey();
+          const merged = [];
+          Object.values(state.weeks).forEach(wk=> merged.push(...wk.exercises));
+          state.months[mk] = { exercises: merged.length ? merged : [blankExercise(), blankExercise(), blankExercise()] };
+          state.monthOrder = [mk];
+          delete state.weeks;
+        } else {
+          const mk = currentMonthKey();
+          state.months[mk] = { exercises: [blankExercise(), blankExercise(), blankExercise()] };
+          state.monthOrder = [mk];
+        }
+      }
+      Object.values(state.months).forEach(mo=>{
+        mo.exercises.forEach(ex=>{ if(!ex.checks) ex.checks = {}; });
+      });
+      state.monthOrder.sort();
+      return;
+    }
+  }catch(e){ /* not found or storage unavailable */ }
+  state = defaultState();
+}
+let saveTimer=null;
+async function saveState(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state));
+    const tick = document.getElementById("saveTick");
+    tick.classList.add("show");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>tick.classList.remove("show"), 1200);
+  }catch(e){ console.error("save failed", e); }
+}
+
+let activeTab = null;
+
+function pct(monthKey){
+  const mo = state.months[monthKey];
+  if(!mo) return 0;
+  const days = monthDays(monthKey);
+  const total = mo.exercises.length * days.length;
+  if(total===0) return 0;
+  let done = 0;
+  mo.exercises.forEach(ex=>{
+    days.forEach(d=>{ if(ex.checks[d]==="done") done++; });
+  });
+  return Math.round((done/total)*100);
+}
+
+function renderTabs(){
+  const bar = document.getElementById("tabbar");
+  bar.innerHTML = "";
+  state.monthOrder.forEach(mk=>{
+    const btn = document.createElement("div");
+    btn.className = "tab" + (activeTab===mk ? " active":"");
+    btn.style.setProperty("--pct", pct(mk));
+    btn.innerHTML = `<span class="ring"></span><span>${monthLabel(mk)}</span>`;
+    btn.onclick = ()=>{ activeTab = mk; render(); };
+    bar.appendChild(btn);
+  });
+  const addBtn = document.createElement("div");
+  addBtn.className = "tab tab-add";
+  addBtn.innerHTML = `<span class="num">＋</span><span>月を追加</span>`;
+  addBtn.onclick = ()=>{
+    const input = prompt("追加する月を選択してください（例：2026-09）", nextMonthKey());
+    if(!input) return;
+    const mk = input.trim();
+    if(!/^\d{4}-\d{2}$/.test(mk)){ alert("YYYY-MM の形式で入力してください"); return; }
+    if(!state.months[mk]){
+      state.months[mk] = { exercises: [blankExercise(), blankExercise(), blankExercise()] };
+      state.monthOrder.push(mk);
+      state.monthOrder.sort();
+    }
+    activeTab = mk;
+    saveState();
+    render();
+  };
+  bar.appendChild(addBtn);
+
+  const bar2 = document.getElementById("tabbar2");
+  bar2.innerHTML = "";
+  const records = [
+    {id:"cardio", label:"有酸素", num:String(state.cardio.length)},
+    {id:"medical", label:"メディカルデータ", num:String(state.medical.metrics.length)},
+    {id:"annual", label:"年間データ", num:"📈"},
+    {id:"goals", label:"目標設定", num:"🎯"},
+    {id:"karte", label:"カルテ", num:String(state.karte.length)},
+    {id:"diet", label:"食事", num:String(state.diet.length)},
+    {id:"care", label:"ケア＆ストレッチ", num:"＋"},
+  ];
+  records.forEach(r=>{
+    const btn = document.createElement("div");
+    btn.className = "tab" + (activeTab===r.id ? " active":"");
+    btn.innerHTML = `<span class="num">${r.num}</span><span>${r.label}</span>`;
+    btn.onclick = ()=>{ activeTab = r.id; render(); };
+    bar2.appendChild(btn);
+  });
+}
+function nextMonthKey(){
+  const last = state.monthOrder[state.monthOrder.length-1] || currentMonthKey();
+  const [y,m] = last.split("-").map(Number);
+  const d = new Date(y, m, 1); // m is 1-indexed already -> next month
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+
+function renderWeeks(){
+  const container = document.getElementById("weeks-container");
+  container.innerHTML = "";
+  state.monthOrder.forEach(mk=>{
+    const panel = document.createElement("section");
+    panel.className = "panel" + (activeTab===mk ? " active":"");
+    panel.id = "panel-"+mk;
+
+    const mo = state.months[mk];
+    const days = monthDays(mk);
+
+    panel.innerHTML = `
+      <div class="week-head">
+        <div class="title">
+          <span class="big display">${monthLabel(mk)}</span>
+          <span class="days">1〜${days.length}日</span>
+        </div>
+        ${state.monthOrder.length>1 ? `<button class="del-row month-del" data-month-del="${mk}" title="この月を削除">月を削除 ×</button>` : ""}
+      </div>
+      <div class="checkgrid-wrap" id="grid-${mk}"></div>
+      <div class="grid-legend">
+        <span><i class="lg lg-done"></i>取り組めた</span>
+        <span><i class="lg lg-skip"></i>取り組めていない</span>
+        <span><i class="lg lg-none"></i>未記録</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>種別</th><th>種目</th><th>動画URL</th><th>注意点</th>
+              <th>重さ/個数</th><th>回数×セット</th><th>休憩</th><th>強度(RPE)</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-${mk}"></tbody>
+        </table>
+      </div>
+
+      <button class="add-row" data-week="${mk}">＋ 種目を追加</button>
+    `;
+    container.appendChild(panel);
+
+    if(state.monthOrder.length>1){
+      const delBtn = panel.querySelector(`[data-month-del="${mk}"]`);
+      if(delBtn) delBtn.addEventListener("click",()=>{
+        if(!confirm(`${monthLabel(mk)}のプログラムを削除しますか？`)) return;
+        delete state.months[mk];
+        state.monthOrder = state.monthOrder.filter(x=>x!==mk);
+        if(activeTab===mk) activeTab = state.monthOrder[0];
+        saveState();
+        render();
+      });
+    }
+
+    // check grid: exercises × days, tap to cycle 未記録 → 取り組めた → 取り組めていない
+    const gridWrap = panel.querySelector(`#grid-${mk}`);
+    if(mo.exercises.length===0){
+      gridWrap.innerHTML = `<div class="grid-empty">種目を追加すると、ここに実施チェック表が表示されます。</div>`;
+    } else {
+      const table = document.createElement("table");
+      table.className = "checkgrid";
+      const thead = document.createElement("thead");
+      thead.innerHTML = `<tr><th class="ex-col">種目</th>${days.map(d=>`<th>${d}</th>`).join("")}</tr>`;
+      table.appendChild(thead);
+      const tbodyG = document.createElement("tbody");
+      mo.exercises.forEach((ex, idx)=>{
+        const tr = document.createElement("tr");
+        const nameCell = document.createElement("td");
+        nameCell.className = "ex-col";
+        nameCell.textContent = ex.name || `種目 ${idx+1}`;
+        tr.appendChild(nameCell);
+        days.forEach(d=>{
+          const td = document.createElement("td");
+          const status = ex.checks[d]; // undefined | "done" | "skip"
+          const btn = document.createElement("button");
+          btn.className = "chk-cell" + (status ? " s-"+status : "");
+          btn.textContent = status==="done" ? "○" : status==="skip" ? "✕" : "";
+          btn.title = `${d}日`;
+          btn.onclick = ()=>{
+            const cur = ex.checks[d];
+            const next = cur===undefined ? "done" : cur==="done" ? "skip" : undefined;
+            if(next===undefined){ delete ex.checks[d]; } else { ex.checks[d] = next; }
+            saveState();
+            renderTabs();
+            renderWeeks();
+            setActivePanel();
+          };
+          td.appendChild(btn);
+          tr.appendChild(td);
+        });
+        tbodyG.appendChild(tr);
+      });
+      table.appendChild(tbodyG);
+      gridWrap.appendChild(table);
+    }
+
+    // exercise rows
+    const tbody = panel.querySelector(`#tbody-${mk}`);
+    mo.exercises.forEach((ex, idx)=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>
+          <select data-week="${mk}" data-idx="${idx}" data-field="type">
+            <option value="CA" ${ex.type==="CA"?"selected":""}>CA</option>
+            <option value="ST" ${ex.type==="ST"?"selected":""}>ST</option>
+            <option value="TR" ${ex.type==="TR"?"selected":""}>TR</option>
+          </select>
+        </td>
+        <td><input data-week="${mk}" data-idx="${idx}" data-field="name" value="${escapeAttr(ex.name)}" placeholder="種目名"></td>
+        <td>
+          <div class="video-cell">
+            <input data-week="${mk}" data-idx="${idx}" data-field="video" value="${escapeAttr(ex.video)}" placeholder="URL">
+            ${ex.video ? `<button class="play-btn" data-video="${escapeAttr(ex.video)}" title="動画を再生">▶</button>` : ""}
+          </div>
+        </td>
+        <td><input data-week="${mk}" data-idx="${idx}" data-field="point" value="${escapeAttr(ex.point)}" placeholder="注意点"></td>
+        <td class="num"><input data-week="${mk}" data-idx="${idx}" data-field="weight" value="${escapeAttr(ex.weight)}" placeholder="-"></td>
+        <td class="num"><input data-week="${mk}" data-idx="${idx}" data-field="reps" value="${escapeAttr(ex.reps)}" placeholder="-"></td>
+        <td class="num"><input data-week="${mk}" data-idx="${idx}" data-field="rest" value="${escapeAttr(ex.rest)}" placeholder="-"></td>
+        <td>
+          <div class="rpe-cell">
+            <span class="rpe-dot" style="background:${rpeColor(ex.rpe)}"></span>
+            <select class="rpe mono" data-week="${mk}" data-idx="${idx}" data-field="rpe">
+              ${[1,2,3,4,5,6,7].map(n=>`<option value="${n}" ${String(ex.rpe)===String(n)?"selected":""}>${n}</option>`).join("")}
+            </select>
+          </div>
+        </td>
+        <td><button class="del-row" data-week="${mk}" data-idx="${idx}" title="削除">×</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+
+  // care panel
+  renderCareMonthly();
+  const careWrap = document.getElementById("care-groups");
+  careWrap.innerHTML = "";
+  CARE_LIBRARY.forEach(g=>{
+    const div = document.createElement("div");
+    div.className = "care-group";
+    div.innerHTML = `<h3>${g.group}</h3><div class="care-list">${
+      g.items.map(it=>{
+        const video = state.careVideos[it.id] || "";
+        return `
+        <div class="care-item">
+          <div class="care-item-main">
+            <div class="care-item-top">
+              <span class="name">${it.name}</span>
+              <span class="time mono">${it.time}</span>
+            </div>
+            ${it.who ? `<span class="who">${it.who}</span>` : ""}
+            <div class="video-cell">
+              <input data-care="${it.id}" value="${escapeAttr(video)}" placeholder="動画URLを追加">
+              ${video ? `<button class="play-btn" data-video="${escapeAttr(video)}" title="動画を再生">▶</button>` : ""}
+            </div>
+          </div>
+        </div>
+      `;}).join("")
+    }</div>`;
+    careWrap.appendChild(div);
+  });
+
+  // cardio panel
+  renderCardioMonthly();
+  renderCardioForm();
+  renderCardioList();
+
+  attachListeners();
+}
+
+function renderCareMonthly(){
+  const host = document.getElementById("care-monthly");
+  if(!host) return;
+  if(!window.__careMonth) window.__careMonth = currentMonthKey();
+  const mk = window.__careMonth;
+  if(!state.careChecks[mk]) state.careChecks[mk] = {};
+  const days = monthDays(mk);
+
+  host.innerHTML = `
+    <div class="care-monthly-head">
+      <input type="month" id="care-month-picker" value="${mk}">
+    </div>
+    <div class="checkgrid-wrap">
+      <table class="checkgrid">
+        <thead><tr><th class="ex-col">グループ</th>${days.map(d=>`<th>${d}</th>`).join("")}</tr></thead>
+        <tbody>
+          ${CARE_LIBRARY.map((g,gi)=>{
+            const rowChecks = state.careChecks[mk][gi] || {};
+            const doneCount = days.filter(d=>rowChecks[d]).length;
+            return `<tr>
+              <td class="ex-col">${g.group}<br><span class="mono care-pct">${doneCount}/${days.length}日</span></td>
+              ${days.map(d=>`<td><button class="chk-cell ${rowChecks[d]?'s-done':''}" data-care-group="${gi}" data-care-day="${d}">${rowChecks[d]?'○':''}</button></td>`).join("")}
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+  host.querySelector("#care-month-picker").addEventListener("change",(e)=>{
+    window.__careMonth = e.target.value || currentMonthKey();
+    renderCareMonthly();
+  });
+  host.querySelectorAll("[data-care-group]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const gi = btn.dataset.careGroup, d = btn.dataset.careDay;
+      if(!state.careChecks[mk][gi]) state.careChecks[mk][gi] = {};
+      state.careChecks[mk][gi][d] = !state.careChecks[mk][gi][d];
+      if(!state.careChecks[mk][gi][d]) delete state.careChecks[mk][gi][d];
+      saveState();
+      renderCareMonthly();
+    });
+  });
+}
+
+function renderCardioMonthly(){
+  const host = document.getElementById("cardio-monthly");
+  if(!host) return;
+  const byMonth = {};
+  state.cardio.forEach(c=>{
+    const m = c.date.slice(0,7);
+    if(!byMonth[m]) byMonth[m] = {duration:0, distance:0, count:0};
+    byMonth[m].duration += Number(c.duration)||0;
+    byMonth[m].distance += Number(c.distance)||0;
+    byMonth[m].count++;
+  });
+  const months = Object.keys(byMonth).sort();
+  const thisMonth = currentMonthKey();
+  const target = state.goals.targets["__cardio_total__"];
+  const thisMonthData = byMonth[thisMonth];
+
+  const barPoints = months.map(m=>({date: m+"-01", value: byMonth[m].duration}));
+  const svg = barChartSVG(barPoints, {width:700, height:110, max: target?Number(target)*1.2:undefined});
+
+  host.innerHTML = `
+    <div class="cardio-summary-head">
+      <div class="stat-pill">今月の合計時間 <span class="mono">${thisMonthData?thisMonthData.duration:0}分</span></div>
+      <div class="stat-pill">今月の合計距離 <span class="mono">${thisMonthData?thisMonthData.distance.toFixed(1):0}km</span></div>
+      <div class="stat-pill">今月の実施回数 <span class="mono">${thisMonthData?thisMonthData.count:0}回</span></div>
+      ${target ? `<div class="stat-pill target-pill">月間目標 <span class="mono">${target}分</span>　達成率 <span class="mono">${thisMonthData ? Math.round(thisMonthData.duration/Number(target)*100) : 0}%</span></div>` : ""}
+    </div>
+    <div class="cardio-chart-wrap">${svg || `<div class="chart-empty">まだ記録がありません</div>`}</div>
+  `;
+}
+
+function renderCardioForm(){
+  const wrap = document.getElementById("cardio-form");
+  if(!wrap) return;
+  wrap.innerHTML = `
+    <div class="cardio-inputs">
+      <input type="date" id="cd-date" value="${todayStr()}">
+      <select id="cd-type">${CARDIO_TYPES.map(t=>`<option value="${t}">${t}</option>`).join("")}</select>
+      <input type="number" id="cd-duration" placeholder="時間(分)" min="0">
+      <input type="number" id="cd-distance" placeholder="距離(km)" min="0" step="0.1">
+      <input type="number" id="cd-hr" placeholder="平均心拍" min="0">
+      <input type="text" id="cd-memo" placeholder="メモ">
+      <button id="cd-add" class="add-row" style="margin:0;">＋ 記録を追加</button>
+    </div>
+  `;
+  document.getElementById("cd-add").addEventListener("click", ()=>{
+    const entry = {
+      date: document.getElementById("cd-date").value || todayStr(),
+      type: document.getElementById("cd-type").value,
+      duration: document.getElementById("cd-duration").value,
+      distance: document.getElementById("cd-distance").value,
+      hr: document.getElementById("cd-hr").value,
+      memo: document.getElementById("cd-memo").value,
+    };
+    state.cardio.push(entry);
+    state.cardio.sort((a,b)=> a.date < b.date ? 1 : -1);
+    saveState();
+    renderTabs();
+    renderCardioForm();
+    renderCardioList();
+    renderCardioMonthly();
+  });
+}
+
+function renderCardioList(){
+  const tbody = document.getElementById("cardio-tbody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  if(state.cardio.length===0){
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--ink-dim);text-align:center;padding:20px;">まだ記録がありません</td></tr>`;
+    return;
+  }
+  state.cardio.forEach((c, idx)=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="mono">${c.date}</td>
+      <td>${c.type}</td>
+      <td class="num mono">${c.duration||"-"}</td>
+      <td class="num mono">${c.distance||"-"}</td>
+      <td class="num mono">${c.hr||"-"}</td>
+      <td>${escapeAttr(c.memo)}</td>
+      <td><button class="del-row" data-cardio-idx="${idx}" title="削除">×</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll("[data-cardio-idx]").forEach(el=>{
+    el.addEventListener("click",(e)=>{
+      const idx = e.currentTarget.dataset.cardioIdx;
+      state.cardio.splice(idx,1);
+      saveState();
+      renderTabs();
+      renderCardioList();
+      renderCardioMonthly();
+    });
+  });
+}
+
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function rpeColor(rpe){
+  const n = Number(rpe)||1;
+  const colors = ["#8CA426","#8CA426","#C6F135","#C6F135","#E9C43A","#FF8A3D","#FF5A36"];
+  return colors[Math.min(n-1,6)];
+}
+
+function escapeAttr(s){
+  return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function attachListeners(){
+  document.querySelectorAll("#weeks-container input[data-field], #weeks-container select[data-field]").forEach(el=>{
+    el.addEventListener("change", (e)=>{
+      const {week, idx, field} = e.target.dataset;
+      state.months[week].exercises[idx][field] = e.target.value;
+      saveState();
+      if(field==="rpe" || field==="video"){ renderWeeks(); setActivePanel(); }
+    });
+  });
+  document.querySelectorAll("#weeks-container .del-row[data-week]").forEach(el=>{
+    el.addEventListener("click",(e)=>{
+      const {week, idx} = e.target.dataset;
+      state.months[week].exercises.splice(idx,1);
+      saveState();
+      renderWeeks();
+      setActivePanel();
+    });
+  });
+  document.querySelectorAll("#weeks-container .add-row[data-week]").forEach(el=>{
+    el.addEventListener("click",(e)=>{
+      const week = e.target.dataset.week;
+      state.months[week].exercises.push(blankExercise());
+      saveState();
+      renderWeeks();
+      setActivePanel();
+    });
+  });
+  document.querySelectorAll(".play-btn").forEach(el=>{
+    el.addEventListener("click",(e)=>{
+      openVideoModal(e.currentTarget.dataset.video);
+    });
+  });
+  document.querySelectorAll("[data-care]").forEach(el=>{
+    el.addEventListener("change",(e)=>{
+      const id = e.target.dataset.care;
+      const val = e.target.value.trim();
+      if(val){ state.careVideos[id] = val; } else { delete state.careVideos[id]; }
+      saveState();
+      renderWeeks();
+      setActivePanel();
+    });
+  });
+}
+
+function getYouTubeEmbed(url){
+  try{
+    const u = new URL(url);
+    let id = null;
+    if(u.hostname.includes("youtu.be")){
+      id = u.pathname.slice(1);
+    } else if(u.hostname.includes("youtube.com")){
+      if(u.pathname === "/watch"){ id = u.searchParams.get("v"); }
+      else if(u.pathname.startsWith("/shorts/")){ id = u.pathname.split("/")[2]; }
+      else if(u.pathname.startsWith("/embed/")){ id = u.pathname.split("/")[2]; }
+    }
+    return id ? `https://www.youtube.com/embed/${id}` : null;
+  }catch(e){ return null; }
+}
+
+function openVideoModal(url){
+  const modal = document.getElementById("videoModal");
+  const body = document.getElementById("modalBody");
+  const embed = getYouTubeEmbed(url);
+  if(embed){
+    body.innerHTML = `<div class="frame-wrap"><iframe src="${embed}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`;
+  } else {
+    body.innerHTML = `<div class="fallback">この動画はアプリ内で再生できない形式のため、新しいタブで開いてください。<br><a href="${escapeAttr(url)}" target="_blank" rel="noopener">${escapeAttr(url)}</a></div>`;
+  }
+  modal.classList.add("show");
+}
+document.getElementById("closeModal").addEventListener("click", ()=>{
+  const modal = document.getElementById("videoModal");
+  modal.classList.remove("show");
+  document.getElementById("modalBody").innerHTML = "";
+});
+document.getElementById("videoModal").addEventListener("click",(e)=>{
+  if(e.target.id==="videoModal"){
+    e.currentTarget.classList.remove("show");
+    document.getElementById("modalBody").innerHTML = "";
+  }
+});
+
+/* ===== メディカルデータ ===== */
+function renderBatchEntry(){
+  const host = document.getElementById("batch-body");
+  if(!host) return;
+  if(!window.__batchDate) window.__batchDate = todayStr();
+
+  const order = ["tanita","medical","sleep","fitness","other"];
+  host.innerHTML = `
+    <div class="batch-date-row">
+      <label>測定日 <input type="date" id="batch-date" value="${window.__batchDate}"></label>
+      <button id="batch-save" class="add-row" style="margin:0;">まとめて保存</button>
+    </div>
+    <div class="batch-groups">
+      ${order.map(cat=>{
+        const metrics = state.medical.metrics.filter(m=>m.category===cat);
+        if(metrics.length===0) return "";
+        return `<div class="batch-group">
+          <h4>${CATEGORY_LABELS[cat]}</h4>
+          <div class="batch-fields">
+            ${metrics.map(m=>`
+              <label class="batch-field">
+                <span>${escapeAttr(m.name)}${m.max?` <em>/${m.max}</em>`:""}</span>
+                ${m.inputType==="symbol"
+                  ? `<select data-batch-metric="${m.id}"><option value="">-</option>${m.options.map(o=>`<option value="${o}">${o}</option>`).join("")}</select>`
+                  : `<input type="number" step="any" data-batch-metric="${m.id}" placeholder="${escapeAttr(m.unit)}">`
+                }
+              </label>
+            `).join("")}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+  `;
+  host.querySelector("#batch-date").addEventListener("change",(e)=>{ window.__batchDate = e.target.value; });
+  host.querySelector("#batch-save").addEventListener("click", ()=>{
+    const date = host.querySelector("#batch-date").value || todayStr();
+    let count = 0;
+    host.querySelectorAll("[data-batch-metric]").forEach(input=>{
+      if(input.value===""){ return; }
+      state.medical.records.push({
+        id: "r"+Date.now()+Math.random().toString(36).slice(2,6),
+        metricId: input.dataset.batchMetric,
+        date, value: input.value
+      });
+      count++;
+      input.value = "";
+    });
+    if(count>0){
+      saveState();
+      renderMedical();
+      renderAnnual();
+      renderTabs();
+    }
+  });
+}
+
+function getActiveGoalMetricIds(){
+  const ids = new Set();
+  let sleepTotal = false, cardioTotal = false;
+  (state.goals.purposes||[]).forEach(pid=>{
+    const purpose = GOAL_PURPOSES[pid];
+    if(!purpose) return;
+    purpose.items.forEach(it=>{
+      if(it.metricId==="__sleep_total__") sleepTotal = true;
+      else if(it.metricId==="__cardio_total__") cardioTotal = true;
+      else ids.add(it.metricId);
+    });
+  });
+  return {ids, sleepTotal, cardioTotal};
+}
+
+function buildMetricCard(metric, cat, isGoalActive){
+  const records = state.medical.records
+    .filter(r=>r.metricId===metric.id)
+    .sort((a,b)=> a.date < b.date ? -1 : 1);
+  const latest = records[records.length-1];
+  const maxTxt = metric.max ? ` / ${metric.max}` : "";
+  const card = document.createElement("div");
+  card.className = "metric-card" + (isGoalActive ? " metric-card-goal" : "");
+  card.innerHTML = `
+    <div class="metric-card-head">
+      <span class="metric-name">${escapeAttr(metric.name)}${isGoalActive ? ' <span class="goal-linked-badge" title="目標設定の対象指標です">🎯 目標設定中</span>' : ''}</span>
+      <span class="metric-card-actions">
+        <button class="del-row" data-edit-metric="${metric.id}" title="名称・単位を編集">✎</button>
+        <button class="del-row" data-del-metric="${metric.id}" title="指標を削除">×</button>
+      </span>
+    </div>
+    <div class="metric-latest">
+      ${latest ? `<span class="mono big-num">${latest.value}</span><span class="unit">${escapeAttr(metric.unit)}${maxTxt}</span>` : `<span class="unit">記録なし</span>`}
+    </div>
+    <div class="metric-chart" id="chart-${metric.id}-${cat}"></div>
+    <div class="metric-add">
+      <input type="date" class="m-date" value="${todayStr()}">
+      ${metric.inputType==="symbol"
+        ? `<select class="m-value">${metric.options.map(o=>`<option value="${o}">${o}</option>`).join("")}</select>`
+        : `<input type="number" class="m-value" placeholder="数値" step="any">`
+      }
+      <button class="add-row m-add" style="margin:0;">追加</button>
+    </div>
+    <div class="metric-hist" id="hist-${metric.id}-${cat}"></div>
+  `;
+
+  const chartWrap = card.querySelector(`#chart-${metric.id}-${cat}`);
+  if(metric.category==="tanita" || metric.category==="medical" || metric.category==="sleep"){
+    const svg = barChartSVG(records.map(r=>({date:r.date, value:Number(r.value)})), {width:260, height:90, max:metric.max});
+    chartWrap.innerHTML = svg || `<div class="chart-empty">まだ記録がありません</div>`;
+  } else if(metric.category==="fitness"){
+    chartWrap.innerHTML = comparisonRowHTML(records, metric);
+  } else {
+    const svg = lineChartSVG(records.map(r=>({date:r.date, value:Number(r.value)})), {width:260, height:70, showAxis:false, dotRadius:2.5});
+    chartWrap.innerHTML = svg || `<div class="chart-empty">まだ記録がありません</div>`;
+  }
+
+  const histWrap = card.querySelector(`#hist-${metric.id}-${cat}`);
+  const recent = records.slice(-5).reverse();
+  histWrap.innerHTML = recent.map(r=>`
+    <div class="hist-row">
+      <span class="mono">${r.date}</span>
+      <span class="mono">${r.value}${escapeAttr(metric.unit)}</span>
+      <button class="del-row" data-del-record="${r.id}">×</button>
+    </div>
+  `).join("");
+
+  card.querySelector(".m-add").addEventListener("click", ()=>{
+    const dateEl = card.querySelector(".m-date");
+    const valEl = card.querySelector(".m-value");
+    if(valEl.value===""){ return; }
+    state.medical.records.push({
+      id: "r"+Date.now()+Math.random().toString(36).slice(2,6),
+      metricId: metric.id,
+      date: dateEl.value || todayStr(),
+      value: valEl.value
+    });
+    saveState();
+    renderMedical();
+    renderAnnual();
+    renderTabs();
+  });
+  card.querySelectorAll("[data-del-record]").forEach(btn=>{
+    btn.addEventListener("click",(e)=>{
+      const id = e.currentTarget.dataset.delRecord;
+      state.medical.records = state.medical.records.filter(r=>r.id!==id);
+      saveState();
+      renderMedical();
+      renderAnnual();
+    });
+  });
+  card.querySelector("[data-del-metric]").addEventListener("click",()=>{
+    if(state.medical.metrics.length<=1) return;
+    state.medical.metrics = state.medical.metrics.filter(m=>m.id!==metric.id);
+    state.medical.records = state.medical.records.filter(r=>r.metricId!==metric.id);
+    saveState();
+    renderMedical();
+    renderAnnual();
+    renderTabs();
+  });
+  card.querySelector("[data-edit-metric]").addEventListener("click",()=>{
+    const newName = prompt("指標名を編集", metric.name);
+    if(newName===null) return;
+    const newUnit = prompt("単位を編集", metric.unit);
+    if(newUnit===null) return;
+    metric.name = newName || metric.name;
+    metric.unit = newUnit;
+    saveState();
+    renderMedical();
+    renderAnnual();
+  });
+
+  return card;
+}
+
+function renderGoalPinned(){
+  const host = document.getElementById("goal-pinned");
+  if(!host) return;
+  const {ids, sleepTotal, cardioTotal} = getActiveGoalMetricIds();
+
+  if(ids.size===0 && !sleepTotal && !cardioTotal){
+    host.innerHTML = `<div class="chart-empty">目標設定タブで目的を選ぶと、対象の指標がここに表示されます</div>`;
+    return;
+  }
+
+  host.innerHTML = "";
+  const purposeLabels = (state.goals.purposes||[]).map(pid=> GOAL_PURPOSES[pid]?.label).filter(Boolean).join("・");
+  const label = document.createElement("div");
+  label.className = "goal-pinned-label";
+  label.textContent = purposeLabels ? `選択中の目的：${purposeLabels}` : "";
+  if(purposeLabels) host.appendChild(label);
+
+  const catGrid = document.createElement("div");
+  catGrid.className = "metric-grid-inner";
+  host.appendChild(catGrid);
+
+  ids.forEach(id=>{
+    const metric = state.medical.metrics.find(m=>m.id===id);
+    if(!metric) return;
+    catGrid.appendChild(buildMetricCard(metric, "pinned", true));
+  });
+
+  if(sleepTotal){
+    const totalGroup = MEDICAL_TOTAL_GROUPS.find(g=>g.category==="sleep");
+    const latestVals = totalGroup.ids.map(id=>{
+      const recs = state.medical.records.filter(r=>r.metricId===id).sort((a,b)=> a.date<b.date?-1:1);
+      return recs.length ? Number(recs[recs.length-1].value) : null;
+    });
+    const allFilled = latestVals.every(v=>v!==null);
+    const sum = allFilled ? latestVals.reduce((a,b)=>a+b,0) : null;
+    const totalCard = document.createElement("div");
+    totalCard.className = "total-card metric-card-goal";
+    totalCard.innerHTML = `
+      <span class="total-label">${totalGroup.label} <span class="goal-linked-badge" title="目標設定の対象指標です">🎯 目標設定中</span></span>
+      <span class="total-value mono">${sum!==null ? `${sum} / ${totalGroup.max}` : "各項目を入力すると自動集計されます"}</span>
+    `;
+    host.insertBefore(totalCard, catGrid);
+  }
+  if(cardioTotal){
+    const note = document.createElement("div");
+    note.className = "total-card metric-card-goal";
+    note.innerHTML = `
+      <span class="total-label">有酸素運動（月合計・分） <span class="goal-linked-badge" title="目標設定の対象指標です">🎯 目標設定中</span></span>
+      <span class="total-value mono">有酸素タブで記録した内容から自動集計されます</span>
+    `;
+    host.insertBefore(note, catGrid);
+  }
+}
+
+function renderMedical(){
+  renderLesch();
+  renderGoalPinned();
+  renderChecklists();
+  renderBatchEntry();
+
+  const grid = document.getElementById("metric-grid");
+  if(!grid) return;
+  grid.innerHTML = "";
+
+  const order = ["tanita","medical","sleep","fitness","other"];
+  const {ids: activeGoalMetricIds, sleepTotal: sleepGoalActive} = getActiveGoalMetricIds();
+
+  order.forEach(cat=>{
+    const metrics = state.medical.metrics.filter(m=>m.category===cat);
+    if(metrics.length===0) return;
+
+    const section = document.createElement("div");
+    section.className = "metric-section";
+    section.innerHTML = `<h3 class="metric-section-title">${CATEGORY_LABELS[cat]}</h3>`;
+
+    // total summary card for medical / sleep groups
+    const totalGroup = MEDICAL_TOTAL_GROUPS.find(g=>g.category===cat);
+    if(totalGroup){
+      const latestVals = totalGroup.ids.map(id=>{
+        const recs = state.medical.records.filter(r=>r.metricId===id).sort((a,b)=> a.date<b.date?-1:1);
+        return recs.length ? Number(recs[recs.length-1].value) : null;
+      });
+      const allFilled = latestVals.every(v=>v!==null);
+      const sum = allFilled ? latestVals.reduce((a,b)=>a+b,0) : null;
+      const isSleepGoalActive = cat==="sleep" && sleepGoalActive;
+      const totalCard = document.createElement("div");
+      totalCard.className = "total-card" + (isSleepGoalActive ? " metric-card-goal" : "");
+      totalCard.innerHTML = `
+        <span class="total-label">${totalGroup.label}${isSleepGoalActive ? ' <span class="goal-linked-badge" title="目標設定の対象指標です">🎯 目標設定中</span>' : ''}</span>
+        <span class="total-value mono">${sum!==null ? `${sum} / ${totalGroup.max}` : "各項目を入力すると自動集計されます"}</span>
+      `;
+      section.appendChild(totalCard);
+    }
+
+    const catGrid = document.createElement("div");
+    catGrid.className = "metric-grid-inner";
+    section.appendChild(catGrid);
+    grid.appendChild(section);
+
+    metrics.forEach(metric=>{
+      const isGoalActive = activeGoalMetricIds.has(metric.id);
+      catGrid.appendChild(buildMetricCard(metric, cat, isGoalActive));
+    });
+  });
+
+  const addBtn = document.getElementById("add-metric-btn");
+  if(addBtn){
+    addBtn.onclick = ()=>{
+      const name = prompt("指標名（例：ウエスト、垂直跳びなど）");
+      if(!name) return;
+      const unit = prompt("単位（例：cm、kg、点）") || "";
+      state.medical.metrics.push({id:"m"+Date.now(), name, unit, category:"other"});
+      saveState();
+      renderMedical();
+      renderAnnual();
+      renderTabs();
+    };
+  }
+}
+
+function comparisonRowHTML(records, metric){
+  const last3 = records.slice(-3).reverse(); // [今回, 前回, 前々回]
+  const labels = ["今回","前回","前々回"];
+  if(last3.length===0) return `<div class="chart-empty">まだ記録がありません</div>`;
+  const isSymbol = metric.inputType==="symbol";
+  return `<div class="compare-row">
+    ${last3.map((r,i)=>{
+      const prev = last3[i+1];
+      let arrow = "";
+      if(prev && !isSymbol && !isNaN(Number(r.value)) && !isNaN(Number(prev.value))){
+        const diff = Number(r.value) - Number(prev.value);
+        arrow = diff > 0 ? `<span class="arrow up">▲</span>` : diff < 0 ? `<span class="arrow down">▼</span>` : `<span class="arrow flat">―</span>`;
+      }
+      return `<div class="compare-cell">
+        <span class="compare-label">${labels[i]}</span>
+        <span class="mono compare-value">${r.value}${escapeAttr(metric.unit)}${arrow}</span>
+        <span class="compare-date">${r.date}</span>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+/* ===== レッシュ理論（足型・重心） ===== */
+function renderChecklists(){
+  const tabsWrap = document.getElementById("checklist-tabs");
+  const bodyWrap = document.getElementById("checklist-body");
+  if(!tabsWrap || !bodyWrap) return;
+  if(!window.__checklistTab) window.__checklistTab = "upper";
+  if(!window.__checklistDate) window.__checklistDate = todayStr();
+  if(!window.__checklistScores) window.__checklistScores = {};
+
+  const groupIds = Object.keys(CHECKLIST_DEFS);
+  tabsWrap.innerHTML = groupIds.map(gid=>{
+    const def = state.checklists.defs[gid];
+    return `<button class="cl-tab ${window.__checklistTab===gid?'active':''}" data-cl-tab="${gid}">${def.label}</button>`;
+  }).join("");
+  tabsWrap.querySelectorAll("[data-cl-tab]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      window.__checklistTab = btn.dataset.clTab;
+      window.__checklistScores = {};
+      renderChecklists();
+    });
+  });
+
+  const gid = window.__checklistTab;
+  const def = state.checklists.defs[gid];
+  const scores = window.__checklistScores;
+  const configuredSum = def.items.reduce((s,it)=>s+Number(it.max||0),0);
+  const enteredSum = def.items.reduce((s,it)=> s + (scores[it.id]!==undefined ? Number(scores[it.id]) : 0), 0);
+
+  bodyWrap.innerHTML = `
+    <div class="cl-summary">
+      <span>目標 <span class="mono">${def.targetMax}点</span></span>
+      <span>現在の配点合計 <span class="mono">${configuredSum}点</span>${configuredSum!==def.targetMax ? ' <em class="cl-warn">（項目の配点を調整すると目標に合わせられます）</em>' : ''}</span>
+      <span>今回の入力合計 <span class="mono lime">${enteredSum}点</span></span>
+    </div>
+    <div class="cl-items">
+      ${def.items.map(it=>{
+        if(it.type==="scale"){
+          const cur = scores[it.id];
+          return `
+            <div class="cl-item">
+              <span class="cl-item-label">${escapeAttr(it.label)}</span>
+              <label class="cl-item-score cl-item-scale">採点
+                <select data-cl-score="${it.id}" data-cl-scale="1">
+                  <option value="">未選択</option>
+                  ${it.scale.map(s=>`<option value="${s.value}" ${String(cur)===String(s.value)?"selected":""}>${escapeAttr(s.label)}（${s.value}点）</option>`).join("")}
+                </select>
+              </label>
+            </div>
+          `;
+        }
+        return `
+        <div class="cl-item">
+          <span class="cl-item-label">${escapeAttr(it.label)}</span>
+          <label class="cl-item-max">配点<input type="number" min="0" step="any" value="${it.max}" data-cl-max="${it.id}"></label>
+          <label class="cl-item-score">採点<input type="number" min="0" max="${it.max}" step="any" placeholder="0-${it.max}" value="${scores[it.id]!==undefined?scores[it.id]:''}" data-cl-score="${it.id}"></label>
+        </div>
+      `;}).join("")}
+    </div>
+    <div class="cl-add-item">
+      <button class="add-row" id="cl-add-item-btn" style="margin:0;">＋ 項目を追加</button>
+    </div>
+    <div class="cl-save-row">
+      <input type="date" id="cl-date" value="${window.__checklistDate}">
+      <button id="cl-save" class="add-row" style="margin:0;">この採点を保存</button>
+    </div>
+    <div class="cl-history" id="cl-history"></div>
+  `;
+
+  bodyWrap.querySelectorAll("[data-cl-max]").forEach(inp=>{
+    inp.addEventListener("change",(e)=>{
+      const item = def.items.find(it=>it.id===e.target.dataset.clMax);
+      item.max = e.target.value;
+      saveState();
+      renderChecklists();
+    });
+  });
+  bodyWrap.querySelectorAll("[data-cl-score]").forEach(inp=>{
+    const handler = (e)=>{
+      scores[e.target.dataset.clScore] = e.target.value;
+      // live-update the entered sum without a full re-render (keeps focus in the input)
+      const newSum = def.items.reduce((s,it)=> s + (scores[it.id]!==undefined && scores[it.id]!=="" ? Number(scores[it.id]) : 0), 0);
+      bodyWrap.querySelector(".cl-summary .lime").textContent = newSum + "点";
+    };
+    inp.addEventListener("input", handler);
+    inp.addEventListener("change", handler);
+  });
+  document.getElementById("cl-add-item-btn").addEventListener("click",()=>{
+    const label = prompt("追加する項目名");
+    if(!label) return;
+    const max = prompt("配点（満点）", "1") || "1";
+    def.items.push({id:"custom"+Date.now(), label, max});
+    saveState();
+    renderChecklists();
+  });
+  document.getElementById("cl-date").addEventListener("change",(e)=>{
+    window.__checklistDate = e.target.value || todayStr();
+  });
+  document.getElementById("cl-save").addEventListener("click",()=>{
+    const date = window.__checklistDate;
+    const total = def.items.reduce((s,it)=> s + (scores[it.id]!==undefined && scores[it.id]!=="" ? Number(scores[it.id]) : 0), 0);
+    state.checklists.records.push({
+      id:"cl"+Date.now(), groupId: gid, date,
+      scores: {...scores}, total
+    });
+    // 対応するメディカル/睡眠の指標にも自動反映（既存のグラフ・合計カードがそのまま使える）
+    state.medical.records.push({
+      id:"r"+Date.now()+Math.random().toString(36).slice(2,6),
+      metricId: def.metricId, date, value: String(total)
+    });
+    window.__checklistScores = {};
+    saveState();
+    renderChecklists();
+    renderMedical();
+    renderAnnual();
+    renderTabs();
+  });
+
+  const histWrap = document.getElementById("cl-history");
+  const groupRecords = state.checklists.records.filter(r=>r.groupId===gid).sort((a,b)=> a.date<b.date?1:-1);
+  if(groupRecords.length===0){
+    histWrap.innerHTML = `<div class="chart-empty">まだ採点記録がありません</div>`;
+  } else {
+    histWrap.innerHTML = groupRecords.map((r,idx)=>`
+      <div class="cl-hist-row">
+        <span class="mono">${r.date}</span>
+        <span class="mono lime">${r.total}点</span>
+        <button class="del-row" data-cl-del="${r.id}">×</button>
+      </div>
+    `).join("");
+    histWrap.querySelectorAll("[data-cl-del]").forEach(btn=>{
+      btn.addEventListener("click",(e)=>{
+        const id = e.currentTarget.dataset.clDel;
+        state.checklists.records = state.checklists.records.filter(r=>r.id!==id);
+        saveState();
+        renderChecklists();
+      });
+    });
+  }
+}
+
+function renderLesch(){
+  const host = document.getElementById("lesch-widget");
+  if(!host) return;
+  const l = state.medical.lesch;
+  const key = `${l.axis}-${l.type}`;
+  const pos = LESCH_POSITIONS[key] || LESCH_POSITIONS["cross-1"];
+
+  host.innerHTML = `
+    <div class="lesch-controls">
+      <div class="seg" id="lesch-axis">
+        <button data-v="cross" class="${l.axis==='cross'?'active':''}">クロスタイプ</button>
+        <button data-v="parallel" class="${l.axis==='parallel'?'active':''}">パラレルタイプ</button>
+      </div>
+      <div class="seg" id="lesch-type">
+        <button data-v="1" class="${l.type==='1'?'active':''}">1タイプ</button>
+        <button data-v="2" class="${l.type==='2'?'active':''}">2タイプ</button>
+      </div>
+    </div>
+    <div class="lesch-body">
+      ${leschSVG(pos)}
+      <div class="lesch-note">
+        <div class="lesch-label">${pos.label}</div>
+        <p class="lesch-desc">選択したタイプに応じて、足裏内の重心の目安位置（●）を表示しています。実際の圧力分布は計測機器での確認を推奨します。</p>
+      </div>
+    </div>
+  `;
+  host.querySelectorAll("#lesch-axis button").forEach(btn=>{
+    btn.addEventListener("click",()=>{ l.axis = btn.dataset.v; saveState(); renderLesch(); });
+  });
+  host.querySelectorAll("#lesch-type button").forEach(btn=>{
+    btn.addEventListener("click",()=>{ l.type = btn.dataset.v; saveState(); renderLesch(); });
+  });
+}
+
+function leschSVG(pos){
+  // two simple foot outlines with a dot marking the approximate gravity point
+  const footPath = "M50,10 C64,10 70,26 68,42 C66,58 72,70 66,84 C61,96 39,96 34,84 C28,70 34,58 32,42 C30,26 36,10 50,10 Z";
+  const gx = 20 + (pos.x/100)*60;
+  const gy = 8 + (pos.y/100)*84;
+  const mirroredGx = 100 - gx;
+  return `<svg class="lesch-svg" viewBox="0 0 200 100" width="220" height="110">
+    <g transform="translate(0,0) scale(0.9)">
+      <path d="${footPath}" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+      <circle cx="${gx}" cy="${gy}" r="5" fill="var(--lime)" opacity="0.9"/>
+    </g>
+    <g transform="translate(100,0) scale(0.9)">
+      <path d="${footPath}" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+      <circle cx="${mirroredGx}" cy="${gy}" r="5" fill="var(--lime)" opacity="0.9"/>
+    </g>
+  </svg>`;
+}
+
+function barChartSVG(points, opts={}){
+  if(!points || points.length===0) return null;
+  const width = opts.width||260, height = opts.height||90;
+  const padL = 26, padR = 8, padT = 10, padB = 20;
+  const innerW = width-padL-padR, innerH = height-padT-padB;
+  const values = points.map(p=>p.value);
+  const max = opts.max || Math.max(...values)*1.15 || 1;
+  const barW = Math.min(34, innerW/points.length - 6);
+  const gap = innerW/points.length;
+  const bars = points.map((p,i)=>{
+    const x = padL + i*gap + (gap-barW)/2;
+    const h = Math.max(2, (p.value/max)*innerH);
+    const y = padT + innerH - h;
+    const label = i===0 ? "初回" : `${new Date(p.date).getMonth()+1}/${new Date(p.date).getDate()}`;
+    return `
+      <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="var(--lime)" opacity="${i===points.length-1?1:0.55}"/>
+      <text x="${(x+barW/2).toFixed(1)}" y="${(y-3).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--ink-dim)" font-family="SFMono-Regular,monospace">${p.value}</text>
+      <text x="${(x+barW/2).toFixed(1)}" y="${height-4}" text-anchor="middle" font-size="8" fill="var(--ink-dim)">${label}</text>
+    `;
+  }).join("");
+  return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}">
+    <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" stroke="var(--line)" stroke-width="1"/>
+    ${bars}
+  </svg>`;
+}
+
+/* ===== 年間データ ===== */
+function renderAnnualGoals(){
+  const host = document.getElementById("annual-goal-body");
+  if(!host) return;
+  const g = state.goals;
+  const purposes = (g.purposes||[]);
+  if(purposes.length===0){
+    host.innerHTML = `<div class="chart-empty">目標設定タブで目的を選ぶと、達成率がここに表示されます</div>`;
+    return;
+  }
+  host.innerHTML = purposes.map(pid=>{
+    const purpose = GOAL_PURPOSES[pid];
+    if(!purpose) return "";
+    return `<div class="goal-purpose-group">
+      <h4 class="metric-section-title">${purpose.label}</h4>
+      <div class="metric-grid-inner">
+      ${purpose.items.map(item=>{
+        const series = getGoalSeries(item.metricId);
+        const unit = getGoalUnit(item.metricId);
+        const target = g.targets[item.metricId];
+        const rate = computeAchievementRate(series, target);
+        const svg = lineChartSVG(series, {width:400, height:120, target: target!==undefined && target!=="" ? Number(target) : null});
+        return `
+          <div class="metric-card">
+            <div class="metric-card-head"><span class="metric-name">${item.label}</span></div>
+            ${achievementBarHTML(rate)}
+            <div class="metric-chart">${svg || `<div class="chart-empty">まだ記録がありません</div>`}</div>
+          </div>
+        `;
+      }).join("")}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderAnnual(){
+  renderAnnualGoals();
+  const controls = document.getElementById("annual-controls");
+  if(!controls) return;
+  const years = Array.from(new Set(state.medical.records.map(r=>r.date.slice(0,4)))).sort();
+  const currentYear = String(new Date().getFullYear());
+  if(!years.includes(currentYear)) years.push(currentYear);
+  years.sort();
+  if(!window.__annualState) window.__annualState = {metricId: state.medical.metrics[0]?.id, year: currentYear};
+  const sel = window.__annualState;
+  if(!state.medical.metrics.find(m=>m.id===sel.metricId)){ sel.metricId = state.medical.metrics[0]?.id; }
+
+  controls.innerHTML = `
+    <select id="annual-metric">
+      ${["tanita","medical","sleep","fitness","other"].map(cat=>{
+        const ms = state.medical.metrics.filter(m=>m.category===cat);
+        if(ms.length===0) return "";
+        return `<optgroup label="${CATEGORY_LABELS[cat]}">
+          ${ms.map(m=>`<option value="${m.id}" ${m.id===sel.metricId?"selected":""}>${escapeAttr(m.name)}</option>`).join("")}
+        </optgroup>`;
+      }).join("")}
+    </select>
+    <select id="annual-year">
+      ${years.map(y=>`<option value="${y}" ${y===sel.year?"selected":""}>${y}年</option>`).join("")}
+    </select>
+  `;
+  controls.querySelector("#annual-metric").addEventListener("change",(e)=>{
+    sel.metricId = e.target.value; renderAnnual();
+  });
+  controls.querySelector("#annual-year").addEventListener("change",(e)=>{
+    sel.year = e.target.value; renderAnnual();
+  });
+
+  const chartWrap = document.getElementById("annual-chart");
+  const statsWrap = document.getElementById("annual-stats");
+  const metric = state.medical.metrics.find(m=>m.id===sel.metricId);
+  if(!metric){
+    chartWrap.innerHTML = `<div class="chart-empty">指標がありません</div>`;
+    statsWrap.innerHTML = "";
+    return;
+  }
+  const records = state.medical.records
+    .filter(r=>r.metricId===sel.metricId && r.date.slice(0,4)===sel.year)
+    .sort((a,b)=> a.date < b.date ? -1 : 1)
+    .map(r=>({date:r.date, value:Number(r.value)}));
+
+  const svg = lineChartSVG(records, {width:820, height:260, showAxis:true, unit:metric.unit});
+  chartWrap.innerHTML = svg || `<div class="chart-empty">${sel.year}年の「${escapeAttr(metric.name)}」の記録がまだありません。メディカルデータで数値を入力してください。</div>`;
+
+  if(records.length){
+    const values = records.map(r=>r.value);
+    const min = Math.min(...values), max = Math.max(...values);
+    const avg = (values.reduce((a,b)=>a+b,0)/values.length).toFixed(1);
+    statsWrap.innerHTML = `
+      <div class="stat-pill">最小 <span class="mono">${min}${escapeAttr(metric.unit)}</span></div>
+      <div class="stat-pill">最大 <span class="mono">${max}${escapeAttr(metric.unit)}</span></div>
+      <div class="stat-pill">平均 <span class="mono">${avg}${escapeAttr(metric.unit)}</span></div>
+      <div class="stat-pill">記録数 <span class="mono">${records.length}件</span></div>
+    `;
+  } else {
+    statsWrap.innerHTML = "";
+  }
+}
+
+/* SVG line chart. points: [{date:"YYYY-MM-DD", value:Number}] sorted ascending */
+function lineChartSVG(points, opts={}){
+  if(!points || points.length===0) return null;
+  const width = opts.width||600, height = opts.height||180;
+  const showAxis = opts.showAxis!==false;
+  const padL = showAxis ? 42 : 4, padR = 12, padT = 12, padB = showAxis ? 24 : 4;
+  const innerW = width - padL - padR, innerH = height - padT - padB;
+
+  const xs = points.map(p=> new Date(p.date+"T00:00:00").getTime());
+  const ys = points.map(p=> p.value);
+  let minX = Math.min(...xs), maxX = Math.max(...xs);
+  let minY = Math.min(...ys), maxY = Math.max(...ys);
+  if(opts.target!==undefined && opts.target!==null && !isNaN(opts.target)){
+    minY = Math.min(minY, opts.target);
+    maxY = Math.max(maxY, opts.target);
+  }
+  if(minX===maxX){ minX -= 86400000; maxX += 86400000; }
+  if(minY===maxY){ minY -= 1; maxY += 1; }
+  const yPad = (maxY-minY)*0.12;
+  minY -= yPad; maxY += yPad;
+
+  const xPos = t => padL + ((t-minX)/(maxX-minX))*innerW;
+  const yPos = v => padT + innerH - ((v-minY)/(maxY-minY))*innerH;
+
+  const path = points.map((p,i)=> `${i===0?"M":"L"} ${xPos(xs[i]).toFixed(1)} ${yPos(p.value).toFixed(1)}`).join(" ");
+  const areaPath = `${path} L ${xPos(xs[xs.length-1]).toFixed(1)} ${(padT+innerH).toFixed(1)} L ${xPos(xs[0]).toFixed(1)} ${(padT+innerH).toFixed(1)} Z`;
+  const dotRadius = opts.dotRadius || 3.5;
+  const dots = points.map((p,i)=> `<circle cx="${xPos(xs[i]).toFixed(1)}" cy="${yPos(p.value).toFixed(1)}" r="${dotRadius}" fill="var(--lime)" />`).join("");
+
+  let targetLine = "";
+  if(opts.target!==undefined && opts.target!==null && !isNaN(opts.target)){
+    const ty = yPos(opts.target);
+    targetLine = `
+      <line x1="${padL}" y1="${ty.toFixed(1)}" x2="${padL+innerW}" y2="${ty.toFixed(1)}" stroke="var(--flame)" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="${padL+innerW}" y="${(ty-4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--flame)" font-family="SFMono-Regular,monospace">目標 ${opts.target}</text>
+    `;
+  }
+
+  let axis = "";
+  if(showAxis){
+    const fmt = d => { const dt = new Date(d); return `${dt.getMonth()+1}/${dt.getDate()}`; };
+    axis = `
+      <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" stroke="var(--line)" stroke-width="1"/>
+      <text x="${padL-6}" y="${yPos(maxY-yPad).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-dim)" font-family="SFMono-Regular,monospace">${(maxY-yPad).toFixed(1)}</text>
+      <text x="${padL-6}" y="${yPos(minY+yPad).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-dim)" font-family="SFMono-Regular,monospace">${(minY+yPad).toFixed(1)}</text>
+      <text x="${xPos(xs[0]).toFixed(1)}" y="${height-4}" text-anchor="start" font-size="10" fill="var(--ink-dim)" font-family="SFMono-Regular,monospace">${fmt(xs[0])}</text>
+      <text x="${xPos(xs[xs.length-1]).toFixed(1)}" y="${height-4}" text-anchor="end" font-size="10" fill="var(--ink-dim)" font-family="SFMono-Regular,monospace">${fmt(xs[xs.length-1])}</text>
+    `;
+  }
+
+  return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" preserveAspectRatio="none">
+    <path d="${areaPath}" fill="color-mix(in srgb, var(--lime) 12%, transparent)" stroke="none"/>
+    <path d="${path}" fill="none" stroke="var(--lime)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    ${targetLine}
+    ${axis}
+  </svg>`;
+}
+
+/* ===== 目標設定 ===== */
+function computeSleepTotalSeries(){
+  const ids = MEDICAL_TOTAL_GROUPS.find(g=>g.category==="sleep").ids;
+  const byDate = {};
+  state.medical.records.forEach(r=>{
+    if(!ids.includes(r.metricId)) return;
+    if(!byDate[r.date]) byDate[r.date] = {};
+    byDate[r.date][r.metricId] = Number(r.value);
+  });
+  return Object.keys(byDate).filter(d=> ids.every(id=> byDate[d][id]!==undefined))
+    .sort()
+    .map(d=> ({date:d, value: ids.reduce((s,id)=>s+byDate[d][id],0)}));
+}
+function computeCardioMonthlySeries(){
+  const byMonth = {};
+  state.cardio.forEach(c=>{
+    const month = c.date.slice(0,7);
+    byMonth[month] = (byMonth[month]||0) + (Number(c.duration)||0);
+  });
+  return Object.keys(byMonth).sort().map(m=> ({date: m+"-01", value: byMonth[m]}));
+}
+function getGoalSeries(metricId){
+  if(metricId==="__sleep_total__") return computeSleepTotalSeries();
+  if(metricId==="__cardio_total__") return computeCardioMonthlySeries();
+  return state.medical.records.filter(r=>r.metricId===metricId).sort((a,b)=> a.date<b.date?-1:1)
+    .map(r=>({date:r.date, value:Number(r.value)}));
+}
+function getGoalUnit(metricId){
+  if(metricId==="__sleep_total__") return "点";
+  if(metricId==="__cardio_total__") return "分";
+  const m = state.medical.metrics.find(x=>x.id===metricId);
+  return m ? m.unit : "";
+}
+
+/* 達成率＝初回値から目標値までの距離のうち、現在どこまで進んだか（増加・減少どちらの目標でも対応） */
+function computeAchievementRate(series, target){
+  if(!series || series.length===0) return null;
+  if(target===undefined || target===null || target==="" || isNaN(Number(target))) return null;
+  const first = series[0].value;
+  const latest = series[series.length-1].value;
+  const t = Number(target);
+  if(t===first) return null;
+  const pct = ((latest-first)/(t-first))*100;
+  return {pct, first, latest, target:t};
+}
+
+function achievementBarHTML(rate){
+  if(!rate) return `<div class="ach-empty">目標値と記録が揃うと達成率が表示されます</div>`;
+  const clamped = Math.max(0, Math.min(100, rate.pct));
+  const over = rate.pct > 100;
+  return `
+    <div class="ach-wrap">
+      <div class="ach-head">
+        <span>達成率</span>
+        <span class="mono ach-pct">${Math.round(rate.pct)}%${over ? '（目標達成・超過中）' : ''}</span>
+      </div>
+      <div class="ach-bar-track"><div class="ach-bar-fill" style="width:${clamped}%"></div></div>
+    </div>
+  `;
+}
+
+function renderGoals(){
+  const picker = document.getElementById("purpose-picker");
+  const metricsWrap = document.getElementById("goal-metrics");
+  const coreWrap = document.getElementById("corewhy-card");
+  const grid = document.getElementById("goals-grid");
+  if(!grid) return;
+  const g = state.goals;
+
+  // purpose picker (multi-select)
+  picker.innerHTML = `<div class="seg multi">
+    ${Object.entries(GOAL_PURPOSES).map(([id,p])=>`<button data-purpose="${id}" class="${g.purposes.includes(id)?'active':''}">${p.label}</button>`).join("")}
+  </div>`;
+  picker.querySelectorAll("[data-purpose]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const id = btn.dataset.purpose;
+      if(g.purposes.includes(id)){
+        if(g.purposes.length>1) g.purposes = g.purposes.filter(p=>p!==id);
+      } else {
+        g.purposes.push(id);
+      }
+      saveState(); renderGoals();
+    });
+  });
+
+  // goal metrics grouped by each selected purpose
+  if(g.purposes.length===0){
+    metricsWrap.innerHTML = `<div class="chart-empty">目的を選択すると、入力項目が表示されます</div>`;
+  } else {
+    metricsWrap.innerHTML = g.purposes.map(pid=>{
+      const purpose = GOAL_PURPOSES[pid];
+      return `<div class="goal-purpose-group">
+        <h4 class="metric-section-title">${purpose.label}</h4>
+        ${purpose.items.map(item=>{
+          const series = getGoalSeries(item.metricId);
+          const unit = getGoalUnit(item.metricId);
+          const first = series[0];
+          const latest = series[series.length-1];
+          const target = g.targets[item.metricId];
+          const svg = lineChartSVG(series, {width:600, height:150, target: target!==undefined && target!=="" ? Number(target) : null});
+          const isDerived = item.metricId.startsWith("__");
+          const rate = computeAchievementRate(series, target);
+          return `
+            <div class="goalmetric-card">
+              <div class="goalmetric-head">
+                <span class="goalmetric-name">${item.label}</span>
+                <label class="goalmetric-target">目標値
+                  <input type="number" step="any" data-target="${item.metricId}" value="${target!==undefined?target:""}" placeholder="${unit}">
+                </label>
+              </div>
+              <div class="goalmetric-vals">
+                <span>初回 <span class="mono">${first?first.value+unit:"-"}</span></span>
+                <span>最新 <span class="mono lime">${latest?latest.value+unit:"-"}</span></span>
+              </div>
+              ${achievementBarHTML(rate)}
+              <div class="goalmetric-chart">${svg || `<div class="chart-empty">まだ記録がありません（メディカルデータ／有酸素で入力すると反映されます）</div>`}</div>
+              ${isDerived
+                ? `<div class="goalmetric-note">${item.metricId==="__sleep_total__" ? "メディカルデータの睡眠チェックから自動集計されます" : "有酸素タブの記録から月合計を自動集計します"}</div>`
+                : `<div class="goalmetric-add">
+                    <input type="date" class="gm-date" value="${todayStr()}">
+                    <input type="number" step="any" class="gm-value" placeholder="${unit}">
+                    <button class="add-row gm-add" data-metric="${item.metricId}" style="margin:0;">記録を追加</button>
+                  </div>`
+              }
+            </div>
+          `;
+        }).join("")}
+      </div>`;
+    }).join("");
+  }
+  metricsWrap.querySelectorAll("[data-target]").forEach(input=>{
+    input.addEventListener("change",(e)=>{
+      g.targets[e.target.dataset.target] = e.target.value;
+      saveState();
+      renderGoals();
+    });
+  });
+  metricsWrap.querySelectorAll(".gm-add").forEach(btn=>{
+    btn.addEventListener("click",(e)=>{
+      const card = e.target.closest(".goalmetric-card");
+      const dateEl = card.querySelector(".gm-date");
+      const valEl = card.querySelector(".gm-value");
+      if(valEl.value==="") return;
+      state.medical.records.push({
+        id: "r"+Date.now()+Math.random().toString(36).slice(2,6),
+        metricId: e.target.dataset.metric,
+        date: dateEl.value || todayStr(),
+        value: valEl.value
+      });
+      saveState();
+      renderGoals();
+      renderMedical();
+      renderAnnual();
+    });
+  });
+
+  // core why
+  coreWrap.innerHTML = `
+    <h3 class="metric-section-title">＜core why＞</h3>
+    ${CORE_WHY_QUESTIONS.map(q=>`
+      <label class="corewhy-q">
+        <span>${q.q}</span>
+        <textarea rows="2" data-why="${q.id}">${escapeAttr(g.coreWhy[q.id]||"")}</textarea>
+      </label>
+    `).join("")}
+  `;
+  coreWrap.querySelectorAll("[data-why]").forEach(ta=>{
+    ta.addEventListener("change",(e)=>{
+      g.coreWhy[e.target.dataset.why] = e.target.value;
+      saveState();
+    });
+  });
+
+  // client / trainer free sections
+  grid.innerHTML = `
+    <div class="goal-card client">
+      <h3>ご本人記入欄</h3>
+      <label>目標<textarea id="g-goal" rows="3" placeholder="例：3ヶ月で体脂肪率を3%下げる">${escapeAttr(g.client.goal)}</textarea></label>
+      <label>目標達成予定日<input type="date" id="g-target-date" value="${g.client.targetDate||""}"></label>
+      <label>ひとこと<textarea id="g-note" rows="2" placeholder="意気込みなど">${escapeAttr(g.client.note)}</textarea></label>
+    </div>
+    <div class="goal-card trainer">
+      <h3>トレーナー記入欄</h3>
+      <label>所見・評価<textarea id="g-assessment" rows="3" placeholder="現状の評価やコメント">${escapeAttr(g.trainer.assessment)}</textarea></label>
+      <label>推奨アプローチ<textarea id="g-plan" rows="3" placeholder="プログラムの方向性など">${escapeAttr(g.trainer.plan)}</textarea></label>
+      <label>次回面談日<input type="date" id="g-next-review" value="${g.trainer.nextReview||""}"></label>
+    </div>
+  `;
+  const bind = (id, obj, field)=>{
+    document.getElementById(id).addEventListener("change",(e)=>{
+      obj[field] = e.target.value;
+      saveState();
+    });
+  };
+  bind("g-goal", g.client, "goal");
+  bind("g-target-date", g.client, "targetDate");
+  bind("g-note", g.client, "note");
+  bind("g-assessment", g.trainer, "assessment");
+  bind("g-plan", g.trainer, "plan");
+  bind("g-next-review", g.trainer, "nextReview");
+}
+
+/* ===== カルテ ===== */
+function renderKarteProfile(){
+  const host = document.getElementById("karte-profile");
+  if(!host) return;
+  const p = state.karteProfile;
+  const rehabLabel = {ok:"可", no:"否", unknown:"不明"};
+  host.innerHTML = `
+    <div class="profile-grid">
+      <label>その他の既往歴<textarea id="kp-history" rows="3" placeholder="持病など（手術以外）">${escapeAttr(p.history)}</textarea></label>
+      <label>アレルギー情報<textarea id="kp-allergy" rows="3" placeholder="食物・薬剤・素材アレルギーなど">${escapeAttr(p.allergies)}</textarea></label>
+    </div>
+    <div class="surgery-card">
+      <h4>手術歴</h4>
+      <div class="surgery-list" id="surgery-list">
+        ${p.surgeries.length===0 ? `<div class="chart-empty">登録された手術歴はありません</div>` : p.surgeries.map((s,idx)=>`
+          <div class="surgery-row">
+            <span class="mono">${s.date||"日付未設定"}</span>
+            <span class="surgery-desc">${escapeAttr(s.description)}</span>
+            <span class="surgery-rehab rehab-${s.rehabOk}">リハビリ${rehabLabel[s.rehabOk]||"不明"}</span>
+            <button class="del-row" data-surgery-idx="${idx}">×</button>
+          </div>
+        `).join("")}
+      </div>
+      <div class="surgery-add">
+        <input type="date" id="sg-date">
+        <input type="text" id="sg-desc" placeholder="手術内容（例：右膝半月板手術）">
+        <select id="sg-rehab">
+          <option value="ok">リハビリ可</option>
+          <option value="no">リハビリ否</option>
+          <option value="unknown">不明</option>
+        </select>
+        <button id="sg-add" class="add-row" style="margin:0;">＋ 追加</button>
+      </div>
+    </div>
+  `;
+  host.querySelector("#kp-history").addEventListener("change",(e)=>{ p.history = e.target.value; saveState(); });
+  host.querySelector("#kp-allergy").addEventListener("change",(e)=>{ p.allergies = e.target.value; saveState(); });
+  host.querySelector("#sg-add").addEventListener("click",()=>{
+    const date = host.querySelector("#sg-date").value;
+    const description = host.querySelector("#sg-desc").value;
+    const rehabOk = host.querySelector("#sg-rehab").value;
+    if(!description) return;
+    p.surgeries.push({date, description, rehabOk});
+    p.surgeries.sort((a,b)=> (a.date||"") < (b.date||"") ? 1 : -1);
+    saveState();
+    renderKarteProfile();
+  });
+  host.querySelectorAll("[data-surgery-idx]").forEach(btn=>{
+    btn.addEventListener("click",(e)=>{
+      p.surgeries.splice(e.currentTarget.dataset.surgeryIdx,1);
+      saveState();
+      renderKarteProfile();
+    });
+  });
+}
+
+function renderBodyMap(){
+  const wrap = document.getElementById("karte-bodymap");
+  const pointsWrap = document.getElementById("karte-points");
+  const saveWrap = document.getElementById("painlog-save");
+  const historyWrap = document.getElementById("painlog-history");
+  if(!wrap) return;
+  if(!window.__karteView) window.__karteView = "front";
+  if(!window.__pendingPainPoints) window.__pendingPainPoints = [];
+  if(!window.__painDate) window.__painDate = todayStr();
+  const view = window.__karteView;
+  const pending = window.__pendingPainPoints;
+
+  const regions = BODY_REGIONS.filter(r=> r.view==="both" || r.view===view);
+  const bodyOutline = `
+    <ellipse cx="50" cy="8" rx="8" ry="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1"/>
+    <rect x="38" y="17" width="24" height="30" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1"/>
+    <rect x="20" y="19" width="10" height="32" rx="5" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1"/>
+    <rect x="70" y="19" width="10" height="32" rx="5" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1"/>
+    <rect x="38" y="47" width="10" height="42" rx="5" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1"/>
+    <rect x="52" y="47" width="10" height="42" rx="5" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1"/>
+  `;
+  const dots = regions.map(r=>{
+    const active = pending.find(p=>p.region===r.id);
+    return `<circle class="bodymap-dot ${active?'active':''}" data-region="${r.id}" data-label="${escapeAttr(r.label)}" cx="${r.x}" cy="${r.y}" r="3.4"/>`;
+  }).join("");
+
+  wrap.innerHTML = `
+    <div class="bodymap-toggle seg">
+      <button data-view="front" class="${view==='front'?'active':''}">前面</button>
+      <button data-view="back" class="${view==='back'?'active':''}">背面</button>
+    </div>
+    <svg class="bodymap-svg" viewBox="0 0 100 100" width="220" height="220">
+      ${bodyOutline}
+      ${dots}
+    </svg>
+    <div class="bodymap-hint">図をタップして痛み・不安のある部位を記録できます</div>
+  `;
+  wrap.querySelectorAll("[data-view]").forEach(btn=>{
+    btn.addEventListener("click",()=>{ window.__karteView = btn.dataset.view; renderBodyMap(); });
+  });
+  wrap.querySelectorAll(".bodymap-dot").forEach(dot=>{
+    dot.addEventListener("click",()=>{
+      const region = dot.dataset.region;
+      if(!pending.find(p=>p.region===region)){
+        pending.push({region, label: dot.dataset.label, vas:5, note:""});
+      }
+      renderBodyMap();
+    });
+  });
+
+  if(pointsWrap){
+    if(pending.length===0){
+      pointsWrap.innerHTML = `<div class="chart-empty">選択中の部位はありません</div>`;
+    } else {
+      pointsWrap.innerHTML = pending.map((p,idx)=>`
+        <div class="painpoint-chip">
+          <div class="painpoint-top">
+            <span class="painpoint-label">${escapeAttr(p.label)}</span>
+            <button class="del-row" data-remove-point="${idx}">×</button>
+          </div>
+          <label class="painpoint-vas">VAS <input type="range" min="0" max="10" value="${p.vas}" data-vas-idx="${idx}"><span class="mono vas-val">${p.vas}</span></label>
+          <input type="text" class="painpoint-note" placeholder="メモ（痛みの種類・不安の内容など）" value="${escapeAttr(p.note)}" data-note-idx="${idx}">
+        </div>
+      `).join("");
+      pointsWrap.querySelectorAll("[data-remove-point]").forEach(btn=>{
+        btn.addEventListener("click",(e)=>{
+          pending.splice(e.currentTarget.dataset.removePoint,1);
+          renderBodyMap();
+        });
+      });
+      pointsWrap.querySelectorAll("[data-vas-idx]").forEach(inp=>{
+        inp.addEventListener("input",(e)=>{
+          const idx = e.target.dataset.vasIdx;
+          pending[idx].vas = Number(e.target.value);
+          e.target.nextElementSibling.textContent = e.target.value;
+        });
+      });
+      pointsWrap.querySelectorAll("[data-note-idx]").forEach(inp=>{
+        inp.addEventListener("change",(e)=>{
+          pending[e.target.dataset.noteIdx].note = e.target.value;
+        });
+      });
+    }
+  }
+
+  if(saveWrap){
+    saveWrap.innerHTML = `
+      <input type="date" id="pain-date" value="${window.__painDate}">
+      <button id="pain-save" class="add-row" style="margin:0;">この内容を保存</button>
+    `;
+    saveWrap.querySelector("#pain-date").addEventListener("change",(e)=>{ window.__painDate = e.target.value || todayStr(); });
+    saveWrap.querySelector("#pain-save").addEventListener("click", ()=>{
+      if(pending.length===0) return;
+      const date = window.__painDate;
+      const mk = date.slice(0,7);
+      if(!state.painRecords[mk]) state.painRecords[mk] = [];
+      pending.forEach(p=>{
+        state.painRecords[mk].push({date, region:p.region, label:p.label, vas:p.vas, note:p.note});
+      });
+      window.__pendingPainPoints = [];
+      saveState();
+      renderBodyMap();
+    });
+  }
+
+  if(historyWrap){
+    const months = Object.keys(state.painRecords).filter(mk=> state.painRecords[mk].length>0).sort().reverse();
+    if(months.length===0){
+      historyWrap.innerHTML = `<div class="chart-empty">まだ保存された記録はありません</div>`;
+    } else {
+      historyWrap.innerHTML = months.map(mk=>`
+        <div class="painlog-month">
+          <h4>${monthLabel(mk)}</h4>
+          <div class="painlog-entries">
+            ${state.painRecords[mk].map((p,idx)=>`
+              <span class="pain-tag" data-pain-mk="${mk}" data-pain-idx="${idx}">
+                ${p.date} ・ ${escapeAttr(p.label)} ・ VAS ${p.vas}${p.note?`・${escapeAttr(p.note)}`:""}
+                <button class="del-row" data-remove-pain="${mk}|${idx}">×</button>
+              </span>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+      historyWrap.querySelectorAll("[data-remove-pain]").forEach(btn=>{
+        btn.addEventListener("click",(e)=>{
+          const [mk, idx] = e.currentTarget.dataset.removePain.split("|");
+          state.painRecords[mk].splice(Number(idx),1);
+          saveState();
+          renderBodyMap();
+        });
+      });
+    }
+  }
+}
+
+/* ===== 食事 ===== */
+function renderDiet(){
+  const form = document.getElementById("diet-form");
+  const list = document.getElementById("diet-list");
+  if(!form || !list) return;
+
+  form.innerHTML = `
+    <div class="diet-grid">
+      <label>日付<input type="date" id="d-date" value="${todayStr()}"></label>
+      <label>3食食べるか
+        <div class="diet-checks" id="d-meals">
+          ${MEAL_TIME_OPTIONS.map(m=>`<label class="chip-check"><input type="checkbox" value="${m}" checked> ${m}</label>`).join("")}
+        </div>
+      </label>
+      <label>朝食の時間<input type="time" id="d-time-breakfast"></label>
+      <label>昼食の時間<input type="time" id="d-time-lunch"></label>
+      <label>夕食の時間<input type="time" id="d-time-dinner"></label>
+      <label>サプリ・プロテイン
+        <select id="d-supp"><option value="飲まない">飲まない</option><option value="飲む">飲む</option></select>
+      </label>
+      <label>サプリ内容・頻度（飲む場合）<input type="text" id="d-supp-detail" placeholder="例：ザバス／毎日"></label>
+      <label>お酒
+        <select id="d-alcohol"><option value="飲まない">飲まない</option><option value="飲む">飲む</option></select>
+      </label>
+      <label>お酒の種類・頻度（飲む場合）<input type="text" id="d-alcohol-detail" placeholder="例：ビール／週2-3回"></label>
+      <label>1日の水分摂取量
+        <select id="d-water">${WATER_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join("")}</select>
+      </label>
+      <label>嗜好品の摂取量
+        <select id="d-snack">${WATER_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join("")}</select>
+      </label>
+      <label>白米の量
+        <select id="d-rice">${RICE_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join("")}</select>
+      </label>
+      <label>白米を多く食べる時間帯
+        <select id="d-rice-time">${MEAL_TIME_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join("")}</select>
+      </label>
+      <label>メモ<input type="text" id="d-memo" placeholder="気になったことなど"></label>
+    </div>
+    <button id="d-add" class="add-row" style="margin-top:10px;">＋ 記録を追加</button>
+  `;
+
+  document.getElementById("d-add").addEventListener("click", ()=>{
+    const meals = Array.from(form.querySelectorAll("#d-meals input:checked")).map(el=>el.value);
+    const entry = {
+      date: document.getElementById("d-date").value || todayStr(),
+      meals,
+      timeBreakfast: document.getElementById("d-time-breakfast").value,
+      timeLunch: document.getElementById("d-time-lunch").value,
+      timeDinner: document.getElementById("d-time-dinner").value,
+      supplement: document.getElementById("d-supp").value,
+      supplementDetail: document.getElementById("d-supp-detail").value,
+      alcohol: document.getElementById("d-alcohol").value,
+      alcoholDetail: document.getElementById("d-alcohol-detail").value,
+      water: document.getElementById("d-water").value,
+      snack: document.getElementById("d-snack").value,
+      rice: document.getElementById("d-rice").value,
+      riceTime: document.getElementById("d-rice-time").value,
+      memo: document.getElementById("d-memo").value,
+    };
+    state.diet.push(entry);
+    state.diet.sort((a,b)=> a.date < b.date ? 1 : -1);
+    saveState();
+    renderTabs();
+    renderDiet();
+  });
+
+  if(state.diet.length===0){
+    list.innerHTML = `<div class="chart-empty">まだ記録がありません</div>`;
+    return;
+  }
+  list.innerHTML = state.diet.map((d,idx)=>`
+    <div class="diet-row">
+      <div class="diet-row-head">
+        <span class="mono">${d.date}</span>
+        <button class="del-row" data-diet-idx="${idx}">×</button>
+      </div>
+      <div class="diet-row-tags">
+        <span class="diet-tag">3食: ${d.meals.join("・")||"-"}</span>
+        ${d.timeBreakfast?`<span class="diet-tag">朝 ${d.timeBreakfast}</span>`:""}
+        ${d.timeLunch?`<span class="diet-tag">昼 ${d.timeLunch}</span>`:""}
+        ${d.timeDinner?`<span class="diet-tag">夕 ${d.timeDinner}</span>`:""}
+        <span class="diet-tag">サプリ: ${d.supplement}${d.supplementDetail?`（${escapeAttr(d.supplementDetail)}）`:""}</span>
+        <span class="diet-tag">飲酒: ${d.alcohol}${d.alcoholDetail?`（${escapeAttr(d.alcoholDetail)}）`:""}</span>
+        <span class="diet-tag">水分: ${d.water}</span>
+        <span class="diet-tag">嗜好品: ${d.snack}</span>
+        <span class="diet-tag">白米: ${d.rice}（${d.riceTime}）</span>
+      </div>
+      ${d.memo?`<div class="diet-memo">${escapeAttr(d.memo)}</div>`:""}
+    </div>
+  `).join("");
+  list.querySelectorAll("[data-diet-idx]").forEach(btn=>{
+    btn.addEventListener("click",(e)=>{
+      const idx = e.currentTarget.dataset.dietIdx;
+      state.diet.splice(idx,1);
+      saveState();
+      renderTabs();
+      renderDiet();
+    });
+  });
+}
+
+function renderKarte(){
+  renderKarteProfile();
+  renderBodyMap();
+
+  const form = document.getElementById("karte-form");
+  const list = document.getElementById("karte-list");
+  if(!form || !list) return;
+
+  form.innerHTML = `
+    <input type="date" id="k-date" value="${todayStr()}">
+    <div class="k-conditions" id="k-conditions">
+      ${CONDITIONS.map(c=>`<button type="button" class="cond-btn" data-cond="${c.id}" style="--cc:${c.color}">${c.label}</button>`).join("")}
+    </div>
+    <input type="text" id="k-memo" placeholder="メモ（体調・気づいたことなど）">
+    <button id="k-add" class="add-row" style="margin:0;">＋ 記録を追加</button>
+  `;
+  let selectedCond = null;
+  form.querySelectorAll(".cond-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      selectedCond = btn.dataset.cond;
+      form.querySelectorAll(".cond-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+  });
+  document.getElementById("k-add").addEventListener("click", ()=>{
+    const memo = document.getElementById("k-memo").value;
+    const date = document.getElementById("k-date").value || todayStr();
+    state.karte.push({date, condition: selectedCond, memo});
+    state.karte.sort((a,b)=> a.date < b.date ? 1 : -1);
+    saveState();
+    renderTabs();
+    renderKarte();
+  });
+
+  if(state.karte.length===0){
+    list.innerHTML = `<div class="chart-empty">まだ記録がありません</div>`;
+    return;
+  }
+  list.innerHTML = state.karte.map((k,idx)=>{
+    const cond = CONDITIONS.find(c=>c.id===k.condition);
+    return `
+      <div class="karte-row-wrap">
+        <div class="karte-row">
+          <span class="mono karte-date">${k.date}</span>
+          ${cond ? `<span class="karte-cond" style="--cc:${cond.color}">${cond.label}</span>` : `<span class="karte-cond muted">-</span>`}
+          <span class="karte-memo">${escapeAttr(k.memo)}</span>
+          <button class="del-row" data-karte-idx="${idx}">×</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+  list.querySelectorAll("[data-karte-idx]").forEach(btn=>{
+    btn.addEventListener("click",(e)=>{
+      const idx = e.currentTarget.dataset.karteIdx;
+      state.karte.splice(idx,1);
+      saveState();
+      renderTabs();
+      renderKarte();
+    });
+  });
+}
+
+function setActivePanel(){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  const el = document.getElementById("panel-"+activeTab);
+  if(el) el.classList.add("active");
+}
+
+function render(){
+  renderTabs();
+  renderWeeks();
+  renderMedical();
+  renderAnnual();
+  renderGoals();
+  renderKarte();
+  renderDiet();
+  setActivePanel();
+}
+
+(async function init(){
+  await loadState();
+  if(!activeTab) activeTab = state.monthOrder[0];
+  applyTheme();
+  renderThemePicker();
+  render();
+})();
+
+function applyTheme(){
+  document.documentElement.style.setProperty("--lime", state.theme.accent);
+  document.documentElement.style.setProperty("--lime-dim", state.theme.dim);
+}
+
+function renderThemePicker(){
+  const wrap = document.getElementById("themePicker");
+  wrap.innerHTML = THEME_PRESETS.map(p=>`
+    <button class="swatch ${state.theme.accent===p.accent?'active':''}" title="${p.name}" style="--sw:${p.accent}" data-accent="${p.accent}" data-dim="${p.dim}"></button>
+  `).join("") + `<label class="swatch custom" title="カスタムカラー" style="--sw:${state.theme.accent}">
+      <input type="color" id="customColor" value="${state.theme.accent}">
+    </label>`;
+  wrap.querySelectorAll(".swatch[data-accent]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.theme.accent = btn.dataset.accent;
+      state.theme.dim = btn.dataset.dim;
+      applyTheme();
+      saveState();
+      renderThemePicker();
+    });
+  });
+  const custom = document.getElementById("customColor");
+  custom.addEventListener("input", (e)=>{
+    state.theme.accent = e.target.value;
+    state.theme.dim = shade(e.target.value, -30);
+    applyTheme();
+  });
+  custom.addEventListener("change", ()=>{
+    saveState();
+    renderThemePicker();
+  });
+}
+
+function shade(hex, percent){
+  const num = parseInt(hex.replace("#",""),16);
+  let r = (num>>16) + Math.round(2.55*percent);
+  let g = ((num>>8)&0x00FF) + Math.round(2.55*percent);
+  let b = (num&0x0000FF) + Math.round(2.55*percent);
+  r = Math.max(0,Math.min(255,r));
+  g = Math.max(0,Math.min(255,g));
+  b = Math.max(0,Math.min(255,b));
+  return "#" + (0x1000000 + r*0x10000 + g*0x100 + b).toString(16).slice(1);
+}
+</script>
+</body>
+</html>
