@@ -767,18 +767,64 @@
     background:#6CC24A;color:#10150F;border:none;border-radius:999px;
     padding:2px 8px;font-size:10px;cursor:pointer;font-weight:600;
   }
+  .member-badge button.secondary{background:#28352C;color:#EAF0E6;border:1px solid #4C8F34;}
   .sync-badge{
     position:fixed;top:10px;left:10px;z-index:60;font-size:10px;
     color:#8CA292;font-family:"SFMono-Regular",monospace;
     background:#1F2B22;border:1px solid #28352C;padding:4px 8px;border-radius:6px;
   }
+  .member-list-modal{
+    display:none;position:fixed;inset:0;background:rgba(10,11,13,0.85);
+    z-index:70;align-items:center;justify-content:center;padding:20px;
+    font-family:-apple-system,sans-serif;
+  }
+  .member-list-modal.show{display:flex;}
+  .member-list-box{
+    width:100%;max-width:360px;background:#171F19;border:1px solid #28352C;
+    border-radius:12px;overflow:hidden;max-height:80vh;display:flex;flex-direction:column;
+  }
+  .member-list-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 16px;border-bottom:1px solid #28352C;color:#EAF0E6;font-size:14px;font-weight:600;
+  }
+  .member-list-head button{background:none;border:none;color:#8CA292;font-size:18px;cursor:pointer;}
+  .member-list-body{overflow-y:auto;padding:8px;}
+  .member-list-item{
+    display:block;width:100%;text-align:left;background:#1F2B22;border:1px solid #28352C;
+    color:#EAF0E6;border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;cursor:pointer;
+  }
+  .member-list-item:hover{border-color:#6CC24A;}
+  .member-list-item.current{border-color:#6CC24A;color:#6CC24A;}
+  .member-list-empty{color:#8CA292;font-size:12px;padding:20px;text-align:center;}
+  .member-list-add{
+    display:flex;gap:6px;padding:10px 12px;border-top:1px solid #28352C;
+  }
+  .member-list-add input{
+    flex:1;background:#1F2B22;border:1px solid #28352C;color:#EAF0E6;
+    border-radius:6px;padding:8px 10px;font-size:12px;font-family:inherit;
+  }
+  .member-list-add button{
+    background:#6CC24A;color:#10150F;border:none;border-radius:6px;
+    padding:8px 12px;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap;
+  }
 </style>
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8jVLabSCXDjju-jZpfP-0Hz720RJumG7g0Xp7o8yUvYk-QsWraYBxYiBVudFJv-nOwQ/exec"; // ★要編集
+/* =========================================================
+   共有バックエンド接続ブリッジ（Google Apps Script + スプレッドシート）
+   ---------------------------------------------------------
+   下の SCRIPT_URL を、あなたが発行したApps ScriptのURLに
+   書き換えてください。書き換えるまではローカル保存のみで動作します。
+   ========================================================= */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8jVLabSCXDjju-jZpfP-0Hz720RJumG7g0Xp7o8yUvYk-QsWraYBxYiBVudFJv-nOwQ/exec";
+
 const SYNC_ENABLED = SCRIPT_URL.indexOf("https://") === 0;
+
 function getMemberId(){
   const urlParam = new URLSearchParams(location.search).get("member");
-  if(urlParam){ localStorage.setItem("ps-member-id", urlParam); return urlParam; }
+  if(urlParam){
+    localStorage.setItem("ps-member-id", urlParam);
+    return urlParam;
+  }
   let id = localStorage.getItem("ps-member-id");
   if(!id){
     id = prompt("お名前またはIDを入力してください（次回から自動で使われます）", "");
@@ -788,10 +834,12 @@ function getMemberId(){
   return id;
 }
 const MEMBER_ID = SYNC_ENABLED ? getMemberId() : "local";
+
 function scopedKey(key, shared){
   if(shared) return "shared::" + key;
   return "member::" + MEMBER_ID + "::" + key;
 }
+
 if(SYNC_ENABLED){
   window.storage = {
     async get(key, shared){
@@ -805,7 +853,7 @@ if(SYNC_ENABLED){
       const k = scopedKey(key, shared);
       const res = await fetch(SCRIPT_URL, {
         method: "POST",
-        headers: {"Content-Type":"text/plain;charset=utf-8"},
+        headers: {"Content-Type":"text/plain;charset=utf-8"}, // プリフライトを避けるため text/plain で送信
         body: JSON.stringify({action:"set", key:k, value})
       });
       const data = await res.json();
@@ -829,22 +877,86 @@ if(SYNC_ENABLED){
     }
   };
 }
+
+/* 会員一覧：バックエンドに保存されている全会員IDをmember::プレフィックスから抽出する */
+async function fetchAllMemberIds(){
+  const res = await fetch(`${SCRIPT_URL}?action=list&prefix=${encodeURIComponent("member::")}`);
+  const data = await res.json();
+  const ids = (data.keys||[]).map(k=>{
+    const parts = k.split("::");
+    return parts.length>=2 ? parts[1] : null;
+  }).filter(Boolean);
+  return Array.from(new Set(ids)).sort();
+}
+
+function switchToMember(id){
+  localStorage.setItem("ps-member-id", id);
+  location.href = location.pathname + "?member=" + encodeURIComponent(id);
+}
+
+async function openMemberListModal(){
+  const modal = document.getElementById("memberListModal");
+  const body = document.getElementById("memberListBody");
+  modal.classList.add("show");
+  body.innerHTML = `<div class="member-list-empty">読み込み中…</div>`;
+  try{
+    const ids = await fetchAllMemberIds();
+    if(ids.length===0){
+      body.innerHTML = `<div class="member-list-empty">まだ登録された会員がいません</div>`;
+      return;
+    }
+    body.innerHTML = ids.map(id=>`
+      <button class="member-list-item ${id===MEMBER_ID ? 'current' : ''}" data-member-id="${id}">
+        ${id}${id===MEMBER_ID ? '（現在表示中）' : ''}
+      </button>
+    `).join("");
+    body.querySelectorAll("[data-member-id]").forEach(btn=>{
+      btn.addEventListener("click", ()=> switchToMember(btn.dataset.memberId));
+    });
+  }catch(e){
+    body.innerHTML = `<div class="member-list-empty">読み込みに失敗しました。SCRIPT_URLの設定をご確認ください。</div>`;
+  }
+}
+
 window.addEventListener("DOMContentLoaded", ()=>{
   const sync = document.createElement("div");
   sync.className = "sync-badge";
   sync.textContent = SYNC_ENABLED ? "🟢 同期モード" : "⚪ ローカル保存のみ（SCRIPT_URL未設定）";
   document.body.appendChild(sync);
+
   if(SYNC_ENABLED){
     const badge = document.createElement("div");
     badge.className = "member-badge";
-    badge.innerHTML = `会員: <b>${MEMBER_ID}</b> <button id="switch-member">切替</button>`;
+    badge.innerHTML = `会員: <b>${MEMBER_ID}</b> <button id="switch-member" class="secondary">切替</button> <button id="open-member-list">会員一覧</button>`;
     document.body.appendChild(badge);
     badge.querySelector("#switch-member").addEventListener("click", ()=>{
       const id = prompt("表示する会員のお名前またはIDを入力してください", MEMBER_ID);
-      if(id){
-        localStorage.setItem("ps-member-id", id);
-        location.href = location.pathname + "?member=" + encodeURIComponent(id);
-      }
+      if(id) switchToMember(id);
+    });
+    badge.querySelector("#open-member-list").addEventListener("click", openMemberListModal);
+
+    const modal = document.createElement("div");
+    modal.className = "member-list-modal";
+    modal.id = "memberListModal";
+    modal.innerHTML = `
+      <div class="member-list-box">
+        <div class="member-list-head">
+          <span>会員一覧</span>
+          <button id="closeMemberList">×</button>
+        </div>
+        <div class="member-list-body" id="memberListBody"></div>
+        <div class="member-list-add">
+          <input type="text" id="newMemberInput" placeholder="新しい会員のID・お名前">
+          <button id="newMemberBtn">切替</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById("closeMemberList").addEventListener("click", ()=> modal.classList.remove("show"));
+    modal.addEventListener("click",(e)=>{ if(e.target===modal) modal.classList.remove("show"); });
+    document.getElementById("newMemberBtn").addEventListener("click", ()=>{
+      const id = document.getElementById("newMemberInput").value.trim();
+      if(id) switchToMember(id);
     });
   }
 });
