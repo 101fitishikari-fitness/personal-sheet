@@ -819,54 +819,117 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8jVLabSCXDjju-jZpf
 
 const SYNC_ENABLED = SCRIPT_URL.indexOf("https://") === 0;
 
-function getMemberId(){
-  const urlParam = new URLSearchParams(location.search).get("member");
-  if(urlParam){
-    localStorage.setItem("ps-member-id", urlParam);
-    return urlParam;
+function isTrainerUnlocked(){
+  return localStorage.getItem("ps-trainer-unlocked") === "1";
+}
+
+/* スタッフ用の合言葉はサーバー側（Code.gs の MASTER_STAFF_PIN）だけが知っています。
+   ここでは入力された値をそのままサーバーに問い合わせて確認するので、
+   このファイルの中に正解の合言葉は書き込まれません。 */
+async function unlockTrainer(){
+  const input = prompt("スタッフ用の合言葉を入力してください");
+  if(input===null) return false;
+  try{
+    const res = await fetch(`${SCRIPT_URL}?action=verifyStaffPin&pin=${encodeURIComponent(input)}`);
+    const data = await res.json();
+    if(data.ok){
+      localStorage.setItem("ps-trainer-unlocked", "1");
+      localStorage.setItem("ps-staff-pin", input);
+      return true;
+    }
+    alert("合言葉が違います");
+    return false;
+  }catch(e){
+    alert("確認できませんでした。通信環境をご確認ください。");
+    return false;
+  }
+}
+
+/* 会員ごとのID・暗証番号。初めての人はその場で新規発行し、必ず控えてもらう。
+   2回目以降は、その端末に保存された内容を自動で使う。 */
+function getMemberCreds(){
+  const urlId = new URLSearchParams(location.search).get("member");
+  if(urlId){
+    localStorage.setItem("ps-member-id", urlId);
+    return {id: urlId, pin: localStorage.getItem("ps-member-pin") || ""};
   }
   let id = localStorage.getItem("ps-member-id");
+  let pin = localStorage.getItem("ps-member-pin");
   if(!id){
-    id = prompt("お名前またはIDを入力してください（次回から自動で使われます）", "");
-    if(!id) id = "guest-" + Math.random().toString(36).slice(2,6);
+    const isNew = confirm("はじめてこのアプリを使いますか？\n\n「OK」＝はじめて\n「キャンセル」＝登録済み（IDと暗証番号を入力）");
+    if(isNew){
+      id = "m" + Math.random().toString(36).slice(2,8);
+      pin = prompt("4桁など、お好きな暗証番号を決めてください（次回から必要です）", "") || "0000";
+      alert(`あなたのID： ${id}\nあなたの暗証番号： ${pin}\n\nこの2つを必ず控えてください。他の端末で開くときに必要になります。`);
+    } else {
+      id = prompt("あなたのIDを入力してください", "") || ("guest-"+Math.random().toString(36).slice(2,6));
+      pin = prompt("暗証番号を入力してください", "") || "";
+    }
     localStorage.setItem("ps-member-id", id);
+    localStorage.setItem("ps-member-pin", pin);
   }
-  return id;
+  return {id, pin};
 }
-const MEMBER_ID = SYNC_ENABLED ? getMemberId() : "local";
+
+const _creds = SYNC_ENABLED ? getMemberCreds() : {id:"local", pin:""};
+const MEMBER_ID = _creds.id;
+const MEMBER_PIN = _creds.pin;
+const STAFF_PIN = localStorage.getItem("ps-staff-pin") || "";
 
 function scopedKey(key, shared){
   if(shared) return "shared::" + key;
   return "member::" + MEMBER_ID + "::" + key;
 }
 
+function handlePinError(data){
+  if(data && data.error && String(data.error).indexOf("暗証番号")>=0){
+    alert("暗証番号が正しくありません。もう一度、ご自身のID・暗証番号を入力し直してください。");
+    localStorage.removeItem("ps-member-id");
+    localStorage.removeItem("ps-member-pin");
+    location.reload();
+    return true;
+  }
+  return false;
+}
+
 if(SYNC_ENABLED){
   window.storage = {
     async get(key, shared){
       const k = scopedKey(key, shared);
-      const res = await fetch(`${SCRIPT_URL}?action=get&key=${encodeURIComponent(k)}`);
+      const params = new URLSearchParams({action:"get", key:k, pin: MEMBER_PIN});
+      if(STAFF_PIN) params.set("staffPin", STAFF_PIN);
+      const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
       const data = await res.json();
+      if(handlePinError(data)) throw new Error("pin error");
+      if(data.error) throw new Error(data.error);
       if(!data.found) throw new Error("not found: "+k);
       return {key, value: data.value, shared: !!shared};
     },
     async set(key, value, shared){
       const k = scopedKey(key, shared);
+      const body = {action:"set", key:k, value, pin: MEMBER_PIN};
+      if(STAFF_PIN) body.staffPin = STAFF_PIN;
       const res = await fetch(SCRIPT_URL, {
         method: "POST",
         headers: {"Content-Type":"text/plain;charset=utf-8"}, // プリフライトを避けるため text/plain で送信
-        body: JSON.stringify({action:"set", key:k, value})
+        body: JSON.stringify(body)
       });
       const data = await res.json();
+      if(handlePinError(data)) throw new Error("pin error");
       if(data.error) throw new Error(data.error);
       return {key, value, shared: !!shared};
     },
     async delete(key, shared){
       const k = scopedKey(key, shared);
-      await fetch(SCRIPT_URL, {
+      const body = {action:"delete", key:k, pin: MEMBER_PIN};
+      if(STAFF_PIN) body.staffPin = STAFF_PIN;
+      const res = await fetch(SCRIPT_URL, {
         method:"POST",
         headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body: JSON.stringify({action:"delete", key:k})
+        body: JSON.stringify(body)
       });
+      const data = await res.json();
+      if(handlePinError(data)) throw new Error("pin error");
       return {key, deleted:true, shared: !!shared};
     },
     async list(prefix, shared){
@@ -895,6 +958,7 @@ function switchToMember(id){
 }
 
 async function openMemberListModal(){
+  if(!isTrainerUnlocked()) return;
   const modal = document.getElementById("memberListModal");
   const body = document.getElementById("memberListBody");
   modal.classList.add("show");
@@ -925,15 +989,7 @@ window.addEventListener("DOMContentLoaded", ()=>{
   document.body.appendChild(sync);
 
   if(SYNC_ENABLED){
-    const badge = document.createElement("div");
-    badge.className = "member-badge";
-    badge.innerHTML = `会員: <b>${MEMBER_ID}</b> <button id="switch-member" class="secondary">切替</button> <button id="open-member-list">会員一覧</button>`;
-    document.body.appendChild(badge);
-    badge.querySelector("#switch-member").addEventListener("click", ()=>{
-      const id = prompt("表示する会員のお名前またはIDを入力してください", MEMBER_ID);
-      if(id) switchToMember(id);
-    });
-    badge.querySelector("#open-member-list").addEventListener("click", openMemberListModal);
+    renderMemberBadge();
 
     const modal = document.createElement("div");
     modal.className = "member-list-modal";
@@ -960,6 +1016,32 @@ window.addEventListener("DOMContentLoaded", ()=>{
     });
   }
 });
+
+function renderMemberBadge(){
+  let badge = document.getElementById("memberBadge");
+  if(!badge){
+    badge = document.createElement("div");
+    badge.id = "memberBadge";
+    badge.className = "member-badge";
+    document.body.appendChild(badge);
+  }
+  const unlocked = isTrainerUnlocked();
+  badge.innerHTML = unlocked
+    ? `会員: <b>${MEMBER_ID}</b> <button id="switch-member" class="secondary">切替</button> <button id="open-member-list">会員一覧</button>`
+    : `会員: <b>${MEMBER_ID}</b> <button id="staff-unlock" class="secondary">🔒 スタッフ用</button>`;
+
+  if(unlocked){
+    badge.querySelector("#switch-member").addEventListener("click", ()=>{
+      const id = prompt("表示する会員のお名前またはIDを入力してください", MEMBER_ID);
+      if(id) switchToMember(id);
+    });
+    badge.querySelector("#open-member-list").addEventListener("click", openMemberListModal);
+  } else {
+    badge.querySelector("#staff-unlock").addEventListener("click", async ()=>{
+      if(await unlockTrainer()) renderMemberBadge();
+    });
+  }
+}
 </script>
 
 <script>
