@@ -18,9 +18,18 @@
     --radius:10px;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+  html,body{margin:0;padding:0;color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;
     -webkit-font-smoothing:antialiased;}
+  html{
+    background:
+      radial-gradient(ellipse 900px 600px at 15% -10%, rgba(108,194,74,0.16), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(76,143,52,0.12), transparent 55%),
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 34px),
+      linear-gradient(165deg, #141c10 0%, #10150F 45%, #0c100b 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+  }
   .display{font-family:Oswald,"Arial Narrow",Impact,"Hiragino Kaku Gothic ProN",sans-serif;
     font-weight:700; letter-spacing:0.02em; text-transform:uppercase;}
   .mono{font-family:"SFMono-Regular",Consolas,"Menlo",monospace;}
@@ -28,32 +37,54 @@
   #app{max-width:980px;margin:0 auto;padding:18px 16px 60px;}
 
   /* header */
+  /* LINE banner */
+  .line-banner{
+    display:flex;align-items:center;gap:10px;text-decoration:none;
+    background:linear-gradient(90deg,#06C755,#05a648);color:#fff;
+    padding:10px 16px;border-radius:10px;margin-bottom:14px;
+    box-shadow:0 2px 8px rgba(6,199,85,0.25);
+  }
+  .line-banner-icon{font-size:20px;flex:none;}
+  .line-banner-text{display:flex;flex-direction:column;flex:1;min-width:0;}
+  .line-banner-title{font-weight:800;font-size:14px;letter-spacing:0.02em;}
+  .line-banner-sub{font-size:11px;opacity:0.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .line-banner-arrow{font-size:20px;flex:none;opacity:0.85;}
+
   header.top{
-    display:flex;align-items:baseline;justify-content:space-between;
+    display:flex;align-items:flex-start;justify-content:space-between;
     border-bottom:2px solid var(--line);padding-bottom:14px;margin-bottom:18px;
     flex-wrap:wrap;gap:8px;
   }
-  header.top .brand{display:flex;align-items:baseline;gap:10px;}
+  header.top .brand{display:flex;align-items:flex-start;gap:10px;}
   header.top .brand .mark{
     background:var(--lime);color:var(--bg);font-weight:800;border-radius:4px;
-    padding:2px 8px;font-size:13px;letter-spacing:0.05em;
+    padding:2px 8px;font-size:13px;letter-spacing:0.05em;flex:none;margin-top:2px;
   }
-  header.top h1{font-size:22px;margin:0;letter-spacing:0.03em;}
+  header.top h1{font-size:20px;margin:0 0 4px;letter-spacing:0.03em;}
   header.top .sub{color:var(--ink-dim);font-size:12px;}
   .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
-  .theme-picker{display:flex;align-items:center;gap:6px;}
-  .swatch{
-    width:20px;height:20px;border-radius:50%;border:2px solid transparent;
-    background:var(--sw);cursor:pointer;padding:0;position:relative;
+  .brand-name-wrap{display:flex;flex-direction:column;gap:4px;}
+  .member-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .member-name-input{
+    background:var(--surface);border:1px solid var(--line);color:var(--lime);
+    border-radius:6px;padding:5px 10px;font-size:15px;font-weight:600;font-family:inherit;
+    min-width:140px;
   }
-  .swatch.active{border-color:var(--ink);}
-  .swatch.custom{overflow:hidden;display:inline-block;}
-  .swatch.custom input[type="color"]{
-    width:34px;height:34px;margin:-7px 0 0 -7px;border:none;padding:0;cursor:pointer;background:none;
+  .join-date-label{
+    display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-dim);
+  }
+  .join-date-input{
+    background:var(--surface);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:4px 7px;font-size:11px;font-family:inherit;
+  }
+  .member-months{
+    font-size:11px;color:var(--lime);background:color-mix(in srgb, var(--lime) 10%, transparent);
+    padding:3px 9px;border-radius:999px;border:1px solid var(--lime-dim);white-space:nowrap;
   }
 
   /* tabs */
   .tabbar-2{margin-top:-8px;}
+  .tabbar-2 + .tabbar-2{margin-top:8px;}
   .tabbar-2 .tab{font-size:12px;padding:7px 12px;}
   .tabbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
   .tab{
@@ -163,6 +194,23 @@
     display:flex;align-items:center;justify-content:center;padding:0 0 0 1px;
   }
   .play-btn:hover{background:var(--lime);color:var(--bg);}
+  .play-btn.watch-btn{
+    width:auto;border-radius:8px;padding:6px 12px;font-size:11px;gap:4px;font-weight:600;
+  }
+  .video-none{font-size:11px;color:var(--ink-dim);font-style:italic;}
+  .note-btn{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink-dim);
+    border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;white-space:nowrap;
+  }
+  .note-btn:hover{border-color:var(--lime);color:var(--lime);}
+  .note-box{max-width:480px;}
+  .note-box-body{padding:16px;}
+  .note-box-body textarea{
+    width:100%;min-height:120px;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--ink);border-radius:8px;padding:10px;font-size:13px;font-family:inherit;resize:vertical;
+  }
+  .note-box-body p{font-size:14px;line-height:1.8;white-space:pre-wrap;margin:0;}
+  .note-box-body .note-save{margin-top:10px;}
 
   .video-modal{
     display:none;position:fixed;inset:0;background:rgba(10,11,13,0.85);
@@ -198,6 +246,12 @@
 
   /* care library */
   .care-groups{display:grid;gap:14px;}
+  .care-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .care-filter-btn{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink-dim);
+    padding:5px 11px;border-radius:999px;font-size:11px;cursor:pointer;
+  }
+  .care-filter-btn.active{background:var(--lime);color:var(--bg);border-color:var(--lime);font-weight:600;}
   .care-group h3{
     font-size:13px;color:var(--ink-dim);margin:0 0 8px;text-transform:uppercase;
     letter-spacing:0.05em;display:flex;align-items:center;gap:8px;
@@ -294,6 +348,11 @@
     background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
     border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;flex:1;min-width:80px;
   }
+  .breath3-inputs{display:flex;gap:6px;flex:1;min-width:180px;}
+  .breath3-inputs input{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;width:0;flex:1;text-align:center;
+  }
   .metric-hist{border-top:1px solid var(--line);padding-top:6px;display:flex;flex-direction:column;gap:4px;}
   .hist-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink-dim);}
   .hist-row .del-row{font-size:13px;padding:0 4px;}
@@ -310,6 +369,16 @@
   .arrow.down{color:var(--flame);}
   .arrow.flat{color:var(--ink-dim);}
   .compare-date{display:block;font-size:9px;color:var(--ink-dim);margin-top:3px;}
+  .symbol-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:30px;height:30px;border-radius:50%;font-size:15px;font-weight:700;
+    font-family:"SFMono-Regular",Consolas,monospace;line-height:1;margin:0 auto;
+    border:1.5px solid var(--line);background:var(--surface);
+  }
+  .symbol-badge.sym-good{color:var(--lime);border-color:var(--lime);background:color-mix(in srgb, var(--lime) 12%, transparent);}
+  .symbol-badge.sym-mid{color:#E9A24A;border-color:#E9A24A;background:color-mix(in srgb, #E9A24A 12%, transparent);}
+  .symbol-badge.sym-bad{color:var(--flame);border-color:var(--flame);background:color-mix(in srgb, var(--flame) 12%, transparent);}
+  .symbol-badge.sym-none{color:var(--ink-dim);}
 
   /* annual */
   .annual-goal-card{
@@ -530,7 +599,10 @@
     padding:7px 12px;border-radius:999px;font-size:12px;cursor:pointer;
   }
   .cl-tab.active{border-color:var(--lime);color:var(--ink);background:color-mix(in srgb, var(--lime) 10%, transparent);}
-  .cl-summary{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink-dim);margin-bottom:12px;}
+  .cl-summary{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--ink-dim);margin-bottom:12px;}
+  .cl-summary-frac{font-size:14px;color:var(--ink);}
+  .cl-summary-current{color:var(--ink-dim);font-size:12px;}
+  .cl-summary-current .lime{color:var(--lime);font-weight:700;}
   .cl-summary .lime{color:var(--lime);}
   .cl-warn{color:var(--flame);font-style:normal;}
   .cl-items{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
@@ -595,19 +667,35 @@
 </head>
 <body>
 <div id="app">
+  <a class="line-banner" id="lineBanner" href="https://lin.ee/r3R4ddf" target="_blank" rel="noopener">
+    <span class="line-banner-icon">💬</span>
+    <span class="line-banner-text">
+      <span class="line-banner-title">公式LINE</span>
+      <span class="line-banner-sub">使い方のご相談・お問い合わせはいつでもこちらから</span>
+    </span>
+    <span class="line-banner-arrow">›</span>
+  </a>
   <header class="top">
     <div class="brand">
       <span class="mark">P.S.</span>
-      <h1 class="display">パーソナルシート</h1>
+      <div class="brand-name-wrap">
+        <h1 class="display">パーソナルシート</h1>
+        <div class="member-line">
+          <input type="text" id="memberNameInput" class="member-name-input" placeholder="会員名を入力">
+          <label class="join-date-label">入会日 <input type="date" id="joinDateInput" class="join-date-input"></label>
+          <span class="member-months" id="memberMonths"></span>
+        </div>
+      </div>
     </div>
     <div class="header-right">
       <div class="sub">個別トレーニングプログラム ｜ 進捗トラッカー</div>
-      <div class="theme-picker" id="themePicker"></div>
     </div>
   </header>
 
   <div class="tabbar" id="tabbar"></div>
-  <div class="tabbar tabbar-2" id="tabbar2"></div>
+  <div class="tabbar tabbar-2" id="tabbar2a"></div>
+  <div class="tabbar tabbar-2" id="tabbar2b"></div>
+  <div class="tabbar tabbar-2" id="tabbar2c"></div>
 
   <div id="weeks-container"></div>
 
@@ -650,18 +738,19 @@
     </div>
     <div class="checklist-card">
       <div class="batch-head">
-        <h3 class="metric-section-title">詳細チェックリスト（上肢・下肢・筋力・柔軟・睡眠）</h3>
-        <span class="batch-hint">項目ごとに採点すると、自動で小計され下のメディカルチェック／睡眠チェックに反映されます。配点はその場で編集できます。</span>
+        <h3 class="metric-section-title">メディカルチェック（可動域）</h3>
+        <span class="batch-hint">項目ごとに採点すると、自動で小計され上肢・下肢・筋力・柔軟の各指標に反映されます。配点はその場で編集できます。</span>
       </div>
-      <div class="checklist-tabs" id="checklist-tabs"></div>
-      <div class="checklist-body" id="checklist-body"></div>
+      <div class="checklist-tabs" id="checklist-tabs-medical"></div>
+      <div class="checklist-body" id="checklist-body-medical"></div>
     </div>
-    <div class="batch-card">
+    <div class="checklist-card">
       <div class="batch-head">
-        <h3 class="metric-section-title">測定セッションをまとめて入力</h3>
-        <span class="batch-hint">現場での手入力を1回で完了 — 空欄の項目は保存されません</span>
+        <h3 class="metric-section-title">睡眠チェック（位相・質・量　合計45点中）</h3>
+        <span class="batch-hint">位相・質・量それぞれを採点すると、自動で合計されます。</span>
       </div>
-      <div class="batch-body" id="batch-body"></div>
+      <div class="checklist-tabs" id="checklist-tabs-sleep"></div>
+      <div class="checklist-body" id="checklist-body-sleep"></div>
     </div>
     <div class="metric-grid" id="metric-grid"></div>
   </section>
@@ -752,6 +841,16 @@
       <button id="closeModal">×</button>
     </div>
     <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="video-modal" id="noteModal">
+  <div class="box note-box">
+    <div class="box-head">
+      <span>注意点</span>
+      <button id="closeNoteModal">×</button>
+    </div>
+    <div id="noteModalBody"></div>
   </div>
 </div>
 
@@ -1038,7 +1137,7 @@ function renderMemberBadge(){
     badge.querySelector("#open-member-list").addEventListener("click", openMemberListModal);
   } else {
     badge.querySelector("#staff-unlock").addEventListener("click", async ()=>{
-      if(await unlockTrainer()) renderMemberBadge();
+      if(await unlockTrainer()){ renderMemberBadge(); render(); }
     });
   }
 }
@@ -1062,8 +1161,60 @@ function monthDays(monthKey){
   return Array.from({length:n}, (_,i)=>i+1);
 }
 
-const CARE_LIBRARY = [
-  {group:"ウォームアップ（週1）", items:[
+const CARE_LIBRARY_DEFAULT = [
+  {key:"trigger", label:"① ケア（トリガーポイント・ボール）", filterType:"bodyPart", items:[
+    {id:"c2-1", name:"グリッド スパイン", time:"30秒", who:"背中が硬い人", bodyPart:"背中", deviceType:"グリッド"},
+    {id:"c2-6", name:"グリッド プローン", time:"30秒", who:"腰が硬い人", bodyPart:"腰", deviceType:"グリッド"},
+    {id:"c2-11", name:"グリッド 腰", time:"30秒", who:"足が重だるくなる人", bodyPart:"腰", deviceType:"グリッド"},
+    {id:"c2-16", name:"グリッド グルト", time:"30秒", who:"腰が痛い人", bodyPart:"臀部", deviceType:"グリッド"},
+    {id:"c2-5", name:"グリッド ラット", time:"30秒", who:"肩が硬い人", bodyPart:"肩", deviceType:"グリッド"},
+    {id:"c2-7", name:"グリッド 首", time:"30秒", who:"頭痛がする人", bodyPart:"首", deviceType:"グリッド"},
+    {id:"c2-8", name:"グリッド 腕", time:"30秒", who:"腕が上がりにくい人", bodyPart:"腕", deviceType:"グリッド"},
+    {id:"c2-9", name:"グリッド 腕②", time:"30秒", who:"腕が上がりにくい人", bodyPart:"腕", deviceType:"グリッド"},
+    {id:"c2-10", name:"グリッド 胸", time:"30秒", who:"腕が上がりにくい人", bodyPart:"胸", deviceType:"グリッド"},
+    {id:"c2-2", name:"グリッド クワッド", time:"30秒", who:"もも前が硬い人", bodyPart:"もも", deviceType:"グリッド"},
+    {id:"c2-3", name:"グリッド ラテラル", time:"30秒", who:"もも横が硬い人", bodyPart:"もも", deviceType:"グリッド"},
+    {id:"c2-13", name:"グリッド 内転", time:"30秒", who:"膝が痛い人", bodyPart:"もも", deviceType:"グリッド"},
+    {id:"c2-14", name:"グリッド ハム", time:"30秒", who:"腰が痛い人", bodyPart:"もも", deviceType:"グリッド"},
+    {id:"c2-4", name:"グリッド ガストロ", time:"30秒", who:"ふくらはぎが硬い人", bodyPart:"ふくらはぎ", deviceType:"グリッド"},
+    {id:"c2-12", name:"グリッド スネ", time:"30秒", who:"足首が硬い人", bodyPart:"足首", deviceType:"グリッド"},
+    {id:"c2-15", name:"グリッド 足底", time:"30秒", who:"膝が痛い人", bodyPart:"足裏", deviceType:"グリッド"},
+    {id:"c3-2", name:"ボール クワッド", time:"30秒", who:"もも前が硬い人", bodyPart:"もも", deviceType:"ボール"},
+    {id:"c3-3", name:"ボール ラテラル", time:"30秒", who:"もも外が硬い人", bodyPart:"もも", deviceType:"ボール"},
+    {id:"c3-4", name:"ボール インナー", time:"30秒", who:"もも内が硬い人", bodyPart:"もも", deviceType:"ボール"},
+    {id:"c3-8", name:"ボール グルト", time:"30秒", who:"お尻が硬い人", bodyPart:"臀部", deviceType:"ボール"},
+    {id:"c3-5", name:"ボール ガストロ", time:"30秒", who:"ふくらはぎが硬い人", bodyPart:"ふくらはぎ", deviceType:"ボール"},
+    {id:"c3-6", name:"ボール ソール", time:"30秒", who:"足裏が硬い人", bodyPart:"足裏", deviceType:"ボール"},
+    {id:"c3-1", name:"ボール スパイン", time:"30秒", who:"腰が痛い人", bodyPart:"腰", deviceType:"ボール"},
+  ]},
+  {key:"breath", label:"② 呼吸", note:"呼吸が平均40秒以下の人", filterType:"none", items:[
+    {id:"c3-7", name:"ブレッシング", time:"60秒", who:"仰向け姿勢"},
+    {id:"c3-9", name:"キャット ブレス", time:"-", who:"よつんばい姿勢"},
+    {id:"c3-10", name:"ダンゴ ブレス", time:"-", who:"よつんばい姿勢"},
+    {id:"c3-11", name:"サイドベント ブレス", time:"-", who:"立膝姿勢"},
+  ]},
+  {key:"stretch", label:"③ ストレッチ", filterType:"category", items:[
+    {id:"c4-9", name:"トライセプスストレッチ", time:"40秒", who:"二の腕が硬い人", category:"上肢"},
+    {id:"c4-11", name:"ネックストレッチ①", time:"40秒", who:"首が硬い人", category:"上肢"},
+    {id:"c4-12", name:"ネックストレッチ②", time:"40秒", who:"首が硬い人", category:"上肢"},
+    {id:"c4-13", name:"アームストレッチ", time:"40秒", who:"", category:"上肢"},
+    {id:"c4-14", name:"バイセプス ストレッチ", time:"40秒", who:"", category:"上肢"},
+    {id:"c4-15", name:"リスト ストレッチ", time:"40秒", who:"", category:"上肢"},
+    {id:"c4-6", name:"クランチストレッチ", time:"40秒", who:"お腹が硬い人", category:"体幹"},
+    {id:"c4-7", name:"ラテラルベントストレッチ", time:"40秒", who:"横腹が硬い人", category:"体幹"},
+    {id:"c4-10", name:"チェストストレッチ", time:"40秒", who:"胸が硬い人", category:"体幹"},
+    {id:"c4-16", name:"スパイン ストレッチ", time:"40秒", who:"背中が硬い人", category:"体幹"},
+    {id:"c4-1", name:"90-90グルト", time:"40秒", who:"お尻が硬い人", category:"下肢"},
+    {id:"c4-2", name:"ハムストレッチ", time:"40秒", who:"もも裏が硬い人", category:"下肢"},
+    {id:"c4-3", name:"ガストロストレッチ", time:"40秒", who:"ふくらはぎが硬い人", category:"下肢"},
+    {id:"c4-4", name:"クワッドストレッチ", time:"40秒", who:"もも前が硬い人", category:"下肢"},
+    {id:"c4-5", name:"ラテラルストレッチ", time:"40秒", who:"もも横が硬い人", category:"下肢"},
+    {id:"c4-8", name:"ソアスストレッチ", time:"40秒", who:"股関節が硬い人", category:"下肢"},
+    {id:"c4-17", name:"フットフィンガー ストレッチ", time:"40秒", who:"足指が丸まっている人", category:"下肢"},
+  ]},
+  {key:"warmup", label:"④ ウォームアップ", filterType:"none", items:[
+    {id:"c1-11", name:"ビジョントレーニング", time:"-"},
+    {id:"c1-12", name:"カーフリセット", time:"-"},
     {id:"c1-1", name:"ストレッチポール リブゲージ", time:"-"},
     {id:"c1-2", name:"ストレッチポール シングルアーム", time:"-"},
     {id:"c1-3", name:"ストレッチポール エクスターナル", time:"-"},
@@ -1075,46 +1226,20 @@ const CARE_LIBRARY = [
     {id:"c1-9", name:"SLR", time:"40秒×3"},
     {id:"c1-10", name:"ヒップリフト", time:"40秒×3"},
   ]},
-  {group:"トリガーポイント（週3）", items:[
-    {id:"c2-1", name:"グリッド スパイン", time:"30秒", who:"背中が硬い人"},
-    {id:"c2-2", name:"グリッド クワッド", time:"30秒", who:"もも前が硬い人"},
-    {id:"c2-3", name:"グリッド ラテラル", time:"30秒", who:"もも横が硬い人"},
-    {id:"c2-4", name:"グリッド ガストロ", time:"30秒", who:"ふくらはぎが硬い人"},
-    {id:"c2-5", name:"グリッド ラット", time:"30秒", who:"肩が硬い人"},
-    {id:"c2-6", name:"グリッド プローン", time:"30秒", who:"腰が硬い人"},
-    {id:"c2-7", name:"グリッド 首", time:"30秒", who:"頭痛がする人"},
-    {id:"c2-8", name:"グリッド 腕", time:"30秒", who:"腕が上がりにくい人"},
-    {id:"c2-9", name:"グリッド 腕②", time:"30秒", who:"腕が上がりにくい人"},
-    {id:"c2-10", name:"グリッド 胸", time:"30秒", who:"腕が上がりにくい人"},
-    {id:"c2-11", name:"グリッド 腰", time:"30秒", who:"足が重だるくなる人"},
-    {id:"c2-12", name:"グリッド スネ", time:"30秒", who:"足首が硬い人"},
-    {id:"c2-13", name:"グリッド 内転", time:"30秒", who:"膝が痛い人"},
-    {id:"c2-14", name:"グリッド ハム", time:"30秒", who:"腰が痛い人"},
-    {id:"c2-15", name:"グリッド 足底", time:"30秒", who:"膝が痛い人"},
-    {id:"c2-16", name:"グリッド 臀部", time:"30秒", who:"腰が痛い人"},
-  ]},
-  {group:"ボール／呼吸（週4）", items:[
-    {id:"c3-1", name:"ボール スパイン", time:"30秒", who:"腰が痛い人"},
-    {id:"c3-2", name:"ボール クワッド", time:"30秒", who:"もも前が硬い人"},
-    {id:"c3-3", name:"ボール ラテラル", time:"30秒", who:"もも横が硬い人"},
-    {id:"c3-4", name:"ボール インナー", time:"30秒", who:"もも内が硬い人"},
-    {id:"c3-5", name:"ボール ガストロ", time:"30秒", who:"ふくらはぎが硬い人"},
-    {id:"c3-6", name:"ボール ソール", time:"30秒", who:"足裏が硬い人"},
-    {id:"c3-7", name:"ブレッシング", time:"60秒", who:"呼吸が40秒以下だった人"},
-  ]},
-  {group:"ストレッチ（週5）", items:[
-    {id:"c4-1", name:"90-90グルト", time:"40秒", who:"お尻が硬い人"},
-    {id:"c4-2", name:"ハムストレッチ", time:"40秒", who:"もも裏が硬い人"},
-    {id:"c4-3", name:"ガストロストレッチ", time:"40秒", who:"ふくらはぎが硬い人"},
-    {id:"c4-4", name:"クワッドストレッチ", time:"40秒", who:"もも前が硬い人"},
-    {id:"c4-5", name:"ラテラルストレッチ", time:"40秒", who:"もも横が硬い人"},
-    {id:"c4-6", name:"クランチストレッチ", time:"40秒", who:"お腹が硬い人"},
-    {id:"c4-7", name:"ラテラルベントストレッチ", time:"40秒", who:"横腹が硬い人"},
-    {id:"c4-8", name:"ソアスストレッチ", time:"40秒", who:"股関節が硬い人"},
-    {id:"c4-9", name:"トライセプスストレッチ", time:"40秒", who:"二の腕が硬い人"},
-    {id:"c4-10", name:"チェストストレッチ", time:"40秒", who:"胸が硬い人"},
-    {id:"c4-11", name:"ネックストレッチ①", time:"40秒", who:"首が硬い人"},
-    {id:"c4-12", name:"ネックストレッチ②", time:"40秒", who:"首が硬い人"},
+  {key:"cooldown", label:"⑤ クールダウン", filterType:"none", items:[
+    {id:"c6-1", name:"バイク", time:"5分"},
+    {id:"c6-2", name:"カーフリセット", time:"-"},
+    {id:"c6-3", name:"もも前ストレッチ", time:"-"},
+    {id:"c6-4", name:"もも裏ストレッチ", time:"-"},
+    {id:"c6-5", name:"開脚ストレッチ", time:"-"},
+    {id:"c6-6", name:"股関節ストレッチ", time:"-"},
+    {id:"c6-7", name:"お腹ストレッチ", time:"-"},
+    {id:"c6-8", name:"腰ストレッチ", time:"-"},
+    {id:"c6-9", name:"背中ストレッチ", time:"-"},
+    {id:"c6-10", name:"胸ストレッチ", time:"-"},
+    {id:"c6-11", name:"肩ストレッチ", time:"-"},
+    {id:"c6-12", name:"首ストレッチ", time:"-"},
+    {id:"c6-13", name:"耳ストレッチ", time:"-"},
   ]},
 ];
 
@@ -1127,7 +1252,7 @@ const CATEGORY_LABELS = {
   tanita: "① TANITA計測",
   medical: "② メディカルチェック",
   sleep: "③ 睡眠チェック",
-  fitness: "体力測定",
+  fitness: "その他項目測定",
   goal: "その他（体組成・活動）",
   other: "その他（バイタル）",
 };
@@ -1145,10 +1270,10 @@ const DEFAULT_METRICS = [
   // ③ 睡眠チェック（合計45点）
   {id:"sleep-phase", name:"位相", unit:"点", category:"sleep", max:15},
   {id:"sleep-quality", name:"質", unit:"点", category:"sleep", max:15},
-  {id:"sleep-quantity", name:"量", unit:"点", category:"sleep", max:18},
+  {id:"sleep-quantity", name:"量", unit:"点", category:"sleep", max:15},
   // 体力測定（前回・前々回と比較）
   {id:"height", name:"1. 身長", unit:"cm", category:"fitness"},
-  {id:"breath", name:"2. 呼吸（3回平均・最大60秒）", unit:"秒", category:"fitness"},
+  {id:"breath", name:"2. 呼吸（3回平均・最大60秒）", unit:"秒", category:"fitness", inputType:"breath3"},
   {id:"sitreach", name:"3. 長座体前屈", unit:"cm", category:"fitness"},
   {id:"grip-r", name:"4. 握力（右）", unit:"kg", category:"fitness"},
   {id:"grip-l", name:"5. 握力（左）", unit:"kg", category:"fitness"},
@@ -1176,7 +1301,7 @@ const DEFAULT_METRICS = [
 ];
 const MEDICAL_TOTAL_GROUPS = [
   {category:"medical", label:"メディカルチェック合計", ids:["med-upper","med-lower","med-strength","med-flex"], max:66},
-  {category:"sleep", label:"睡眠チェック合計", ids:["sleep-phase","sleep-quality","sleep-quantity"], max:48},
+  {category:"sleep", label:"睡眠チェック合計", ids:["sleep-phase","sleep-quality","sleep-quantity"], max:45},
 ];
 /* 詳細チェックリスト：各項目の配点(max)は元シートから完全には確定できなかったため
    目安の初期値です。各項目の配点はその場で編集できます。 */
@@ -1200,13 +1325,13 @@ const CHECKLIST_DEFS = {
       {id:"sh5", label:"肩関節：左→右肩甲骨下", max:1},
       {id:"el1", label:"肘関節：右", max:1},
       {id:"el2", label:"肘関節：左", max:1},
+      {id:"th1", label:"胸椎：右回旋", max:3},
+      {id:"th2", label:"胸椎：左回旋", max:3},
     ]
   },
   lower: {
     label:"下肢（可動域）", metricId:"med-lower", targetMax:22,
     items:[
-      {id:"th1", label:"胸椎：右回旋", max:1},
-      {id:"th2", label:"胸椎：左回旋", max:1},
       {id:"hip1", label:"股関節：右屈曲", max:1},
       {id:"hip2", label:"股関節：右SLR", max:1},
       {id:"hip3", label:"股関節：右前内", max:1},
@@ -1223,8 +1348,8 @@ const CHECKLIST_DEFS = {
       {id:"kn2", label:"膝関節：右内旋", max:1},
       {id:"kn3", label:"膝関節：左膝窩", max:1},
       {id:"kn4", label:"膝関節：左内旋", max:1},
-      {id:"an1", label:"足関節：右", max:1},
-      {id:"an2", label:"足関節：左", max:1},
+      {id:"an1", label:"足関節：右", max:3},
+      {id:"an2", label:"足関節：左", max:3},
     ]
   },
   strength: {
@@ -1269,7 +1394,7 @@ const CHECKLIST_DEFS = {
     ]
   },
   sleepQuantity: {
-    label:"量", metricId:"sleep-quantity", targetMax:18,
+    label:"量", metricId:"sleep-quantity", targetMax:15,
     items:[
       {id:"sn1", label:"平日の睡眠時間が6時間未満", max:3},
       {id:"sn2", label:"本当はもっと寝たいが取れていない", max:3},
@@ -1357,7 +1482,7 @@ function defaultState(){
   months[mk] = { exercises: [ blankExercise(), blankExercise(), blankExercise() ] };
   return {
     months, monthOrder: [mk],
-    careVideos:{}, careChecks:{}, cardio:[],
+    careVideos:{}, careChecks:{}, careLibrary: JSON.parse(JSON.stringify(CARE_LIBRARY_DEFAULT)), cardio:[],
     medical: { metrics: DEFAULT_METRICS.map(m=>({...m})), records: [], lesch: {axis:"cross", type:"1"} },
     checklists: { defs: JSON.parse(JSON.stringify(CHECKLIST_DEFS)), records: [] },
     diet: [],
@@ -1371,6 +1496,7 @@ function defaultState(){
     karte: [],
     karteProfile: {history:"", allergies:"", surgeries:[]},
     painRecords: {},
+    profile: {name:"", joinDate:""},
     theme: {accent: THEME_PRESETS[0].accent, dim: THEME_PRESETS[0].dim}
   };
 }
@@ -1385,6 +1511,45 @@ async function loadState(){
       state = JSON.parse(res.value);
       if(!state.careVideos) state.careVideos = {};
       if(!state.careChecks) state.careChecks = {};
+      if(!state.careLibrary) state.careLibrary = JSON.parse(JSON.stringify(CARE_LIBRARY_DEFAULT));
+      // add any newly introduced groups/items without touching what staff already edited
+      CARE_LIBRARY_DEFAULT.forEach(defGroup=>{
+        let g = state.careLibrary.find(x=>x.key===defGroup.key);
+        if(!g){ state.careLibrary.push(JSON.parse(JSON.stringify(defGroup))); return; }
+        if(defGroup.note!==undefined && g.note===undefined) g.note = defGroup.note;
+        defGroup.items.forEach(defItem=>{
+          if(!g.items.find(it=>it.id===defItem.id)) g.items.push({...defItem});
+        });
+      });
+      // 新しく追加した構造用フィールド（deviceType等）を、既存項目にも補完
+      CARE_LIBRARY_DEFAULT.forEach(defGroup=>{
+        const g2 = state.careLibrary.find(x=>x.key===defGroup.key);
+        if(!g2) return;
+        defGroup.items.forEach(defItem=>{
+          const it = g2.items.find(x=>x.id===defItem.id);
+          if(!it) return;
+          if(defItem.deviceType!==undefined && it.deviceType===undefined) it.deviceType = defItem.deviceType;
+          if(defItem.bodyPart!==undefined && it.bodyPart===undefined) it.bodyPart = defItem.bodyPart;
+          if(defItem.category!==undefined && it.category===undefined) it.category = defItem.category;
+        });
+      });
+      // 個別の名称・対象の更新（既存IDのまま内容だけ変わったもの）
+      const careFieldFixes = [
+        {id:"c2-16", name:"グリッド グルト"},
+        {id:"c3-3", who:"もも外が硬い人"},
+        {id:"c3-7", who:"仰向け姿勢"},
+      ];
+      state.careLibrary.forEach(g=>{
+        g.items.forEach(it=>{
+          const fix = careFieldFixes.find(f=>f.id===it.id);
+          if(fix){ if(fix.name) it.name = fix.name; if(fix.who!==undefined) it.who = fix.who; }
+        });
+      });
+      // 差し替え済みの旧クールダウン仮項目を削除
+      const removedCareIds = ["c5-1","c5-2","c5-3","c5-4","c5-5"];
+      state.careLibrary.forEach(g=>{
+        g.items = g.items.filter(it=>!removedCareIds.includes(it.id));
+      });
       if(!state.cardio) state.cardio = [];
       if(!state.medical) state.medical = { metrics: DEFAULT_METRICS.map(m=>({...m})), records: [], lesch: {axis:"cross", type:"1"} };
       if(!state.medical.lesch) state.medical.lesch = {axis:"cross", type:"1"};
@@ -1443,6 +1608,25 @@ async function loadState(){
           });
         }
       });
+      // 胸椎（th1/th2）は下肢ではなく上肢に分類し直し、配点も1〜3点に変更
+      // 足関節（an1/an2）も配点を1〜3点に変更
+      (function fixUpperLowerReclassify(){
+        const upperDef = state.checklists.defs.upper;
+        const lowerDef = state.checklists.defs.lower;
+        if(!upperDef || !lowerDef) return;
+        ["th1","th2"].forEach(id=>{
+          const idx = lowerDef.items.findIndex(it=>it.id===id);
+          if(idx!==-1){
+            const [moved] = lowerDef.items.splice(idx,1);
+            moved.max = 3;
+            if(!upperDef.items.find(it=>it.id===id)) upperDef.items.push(moved);
+          }
+        });
+        ["an1","an2"].forEach(id=>{
+          const it = lowerDef.items.find(x=>x.id===id);
+          if(it) it.max = 3;
+        });
+      })();
       if(!state.diet) state.diet = [];
       if(!state.goals) state.goals = {
         client: {goal:"", targetDate:"", note:""},
@@ -1469,6 +1653,7 @@ async function loadState(){
         delete k.painPoints;
       });
       if(!state.theme) state.theme = {accent: THEME_PRESETS[0].accent, dim: THEME_PRESETS[0].dim};
+      if(!state.profile) state.profile = {name:"", joinDate:""};
 
       // migrate old week-based training data (state.weeks) into month-based state.months
       if(!state.months){
@@ -1522,7 +1707,12 @@ function pct(monthKey){
   return Math.round((done/total)*100);
 }
 
+const STAFF_ONLY_TABS = ["medical","annual","goals","karte","diet"];
+
 function renderTabs(){
+  if(STAFF_ONLY_TABS.includes(activeTab) && !isTrainerUnlocked()){
+    activeTab = state.monthOrder[0];
+  }
   const bar = document.getElementById("tabbar");
   bar.innerHTML = "";
   state.monthOrder.forEach(mk=>{
@@ -1552,23 +1742,34 @@ function renderTabs(){
   };
   bar.appendChild(addBtn);
 
-  const bar2 = document.getElementById("tabbar2");
-  bar2.innerHTML = "";
-  const records = [
-    {id:"cardio", label:"有酸素", num:String(state.cardio.length)},
-    {id:"medical", label:"メディカルデータ", num:String(state.medical.metrics.length)},
-    {id:"annual", label:"年間データ", num:"📈"},
-    {id:"goals", label:"目標設定", num:"🎯"},
-    {id:"karte", label:"カルテ", num:String(state.karte.length)},
-    {id:"diet", label:"食事", num:String(state.diet.length)},
-    {id:"care", label:"ケア＆ストレッチ", num:"＋"},
+  const unlocked = isTrainerUnlocked();
+  const rowDefs = [
+    ["medical","annual","goals","karte"].filter(id=> unlocked || !STAFF_ONLY_TABS.includes(id)),
+    ["diet"].filter(id=> unlocked || !STAFF_ONLY_TABS.includes(id)),
+    ["cardio","care"],
   ];
-  records.forEach(r=>{
-    const btn = document.createElement("div");
-    btn.className = "tab" + (activeTab===r.id ? " active":"");
-    btn.innerHTML = `<span class="num">${r.num}</span><span>${r.label}</span>`;
-    btn.onclick = ()=>{ activeTab = r.id; render(); };
-    bar2.appendChild(btn);
+  const recordMeta = {
+    cardio: {label:"有酸素", num:String(state.cardio.length)},
+    medical: {label:"メディカルデータ", num:String(state.medical.metrics.length)},
+    annual: {label:"年間データ", num:"📈"},
+    goals: {label:"目標設定", num:"🎯"},
+    karte: {label:"カルテ", num:String(state.karte.length)},
+    diet: {label:"食事", num:String(state.diet.length)},
+    care: {label:"ケア＆ストレッチ", num:"＋"},
+  };
+  const barIds = ["tabbar2a","tabbar2b","tabbar2c"];
+  rowDefs.forEach((row,i)=>{
+    const bar2 = document.getElementById(barIds[i]);
+    if(!bar2) return;
+    bar2.innerHTML = "";
+    row.forEach(id=>{
+      const r = recordMeta[id];
+      const btn = document.createElement("div");
+      btn.className = "tab" + (activeTab===id ? " active":"");
+      btn.innerHTML = `<span class="num">${r.num}</span><span>${r.label}</span>`;
+      btn.onclick = ()=>{ activeTab = id; render(); };
+      bar2.appendChild(btn);
+    });
   });
 }
 function nextMonthKey(){
@@ -1607,7 +1808,7 @@ function renderWeeks(){
         <table>
           <thead>
             <tr>
-              <th>種別</th><th>種目</th><th>動画URL</th><th>注意点</th>
+              <th>種目</th><th>動画</th><th>注意点</th>
               <th>重さ/個数</th><th>回数×セット</th><th>休憩</th><th>強度(RPE)</th><th></th>
             </tr>
           </thead>
@@ -1677,22 +1878,19 @@ function renderWeeks(){
     const tbody = panel.querySelector(`#tbody-${mk}`);
     mo.exercises.forEach((ex, idx)=>{
       const tr = document.createElement("tr");
+      const trainerRow = isTrainerUnlocked();
       tr.innerHTML = `
-        <td>
-          <select data-week="${mk}" data-idx="${idx}" data-field="type">
-            <option value="CA" ${ex.type==="CA"?"selected":""}>CA</option>
-            <option value="ST" ${ex.type==="ST"?"selected":""}>ST</option>
-            <option value="TR" ${ex.type==="TR"?"selected":""}>TR</option>
-          </select>
-        </td>
         <td><input data-week="${mk}" data-idx="${idx}" data-field="name" value="${escapeAttr(ex.name)}" placeholder="種目名"></td>
         <td>
           <div class="video-cell">
-            <input data-week="${mk}" data-idx="${idx}" data-field="video" value="${escapeAttr(ex.video)}" placeholder="URL">
-            ${ex.video ? `<button class="play-btn" data-video="${escapeAttr(ex.video)}" title="動画を再生">▶</button>` : ""}
+            ${trainerRow
+              ? `<input data-week="${mk}" data-idx="${idx}" data-field="video" value="${escapeAttr(ex.video)}" placeholder="URL">
+                 ${ex.video ? `<button class="play-btn" data-video="${escapeAttr(ex.video)}" title="動画を再生">▶</button>` : ""}`
+              : (ex.video ? `<button class="play-btn watch-btn" data-video="${escapeAttr(ex.video)}" title="動画を再生">▶ 動画観る</button>` : `<span class="video-none">動画準備中</span>`)
+            }
           </div>
         </td>
-        <td><input data-week="${mk}" data-idx="${idx}" data-field="point" value="${escapeAttr(ex.point)}" placeholder="注意点"></td>
+        <td><button class="note-btn" data-note-week="${mk}" data-note-idx="${idx}">${ex.point ? "注意点を見る" : (trainerRow ? "注意点を追加" : "注意点なし")}</button></td>
         <td class="num"><input data-week="${mk}" data-idx="${idx}" data-field="weight" value="${escapeAttr(ex.weight)}" placeholder="-"></td>
         <td class="num"><input data-week="${mk}" data-idx="${idx}" data-field="reps" value="${escapeAttr(ex.reps)}" placeholder="-"></td>
         <td class="num"><input data-week="${mk}" data-idx="${idx}" data-field="rest" value="${escapeAttr(ex.rest)}" placeholder="-"></td>
@@ -1707,37 +1905,13 @@ function renderWeeks(){
         <td><button class="del-row" data-week="${mk}" data-idx="${idx}" title="削除">×</button></td>
       `;
       tbody.appendChild(tr);
+      tr.querySelector("[data-note-week]").addEventListener("click", ()=> openNoteModal(mk, idx));
     });
   });
 
   // care panel
   renderCareMonthly();
-  const careWrap = document.getElementById("care-groups");
-  careWrap.innerHTML = "";
-  CARE_LIBRARY.forEach(g=>{
-    const div = document.createElement("div");
-    div.className = "care-group";
-    div.innerHTML = `<h3>${g.group}</h3><div class="care-list">${
-      g.items.map(it=>{
-        const video = state.careVideos[it.id] || "";
-        return `
-        <div class="care-item">
-          <div class="care-item-main">
-            <div class="care-item-top">
-              <span class="name">${it.name}</span>
-              <span class="time mono">${it.time}</span>
-            </div>
-            ${it.who ? `<span class="who">${it.who}</span>` : ""}
-            <div class="video-cell">
-              <input data-care="${it.id}" value="${escapeAttr(video)}" placeholder="動画URLを追加">
-              ${video ? `<button class="play-btn" data-video="${escapeAttr(video)}" title="動画を再生">▶</button>` : ""}
-            </div>
-          </div>
-        </div>
-      `;}).join("")
-    }</div>`;
-    careWrap.appendChild(div);
-  });
+  renderCareGroups();
 
   // cardio panel
   renderCardioMonthly();
@@ -1745,6 +1919,121 @@ function renderWeeks(){
   renderCardioList();
 
   attachListeners();
+}
+
+function careItemCardHTML(it, gi, unlocked){
+  const video = state.careVideos[it.id] || "";
+  return `
+    <div class="care-item">
+      <div class="care-item-main">
+        <div class="care-item-top">
+          <span class="name">${escapeAttr(it.name)}</span>
+          <span class="time mono">${escapeAttr(it.time)}</span>
+        </div>
+        ${it.who ? `<span class="who">${escapeAttr(it.who)}</span>` : ""}
+        <div class="video-cell">
+          ${unlocked
+            ? `<input data-care="${it.id}" value="${escapeAttr(video)}" placeholder="動画URLを追加">
+               ${video ? `<button class="play-btn" data-video="${escapeAttr(video)}" title="動画を再生">▶</button>` : ""}`
+            : (video ? `<button class="play-btn watch-btn" data-video="${escapeAttr(video)}" title="動画を再生">▶ 動画を見る</button>` : `<span class="video-none">動画準備中</span>`)
+          }
+        </div>
+        ${unlocked ? `<button class="del-row care-del-item" data-care-group-idx="${gi}" data-care-item-id="${it.id}" style="align-self:flex-end;">この項目を削除 ×</button>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderCareItemsHTML(visibleItems, gi, unlocked){
+  if(visibleItems.length===0) return `<div class="chart-empty">該当する項目がありません</div>`;
+  const hasDeviceType = visibleItems.some(it=>it.deviceType);
+  if(!hasDeviceType){
+    return `<div class="care-list">${visibleItems.map(it=>careItemCardHTML(it, gi, unlocked)).join("")}</div>`;
+  }
+  const devices = Array.from(new Set(visibleItems.map(it=>it.deviceType || "その他")));
+  return devices.map(dev=>{
+    const items = visibleItems.filter(it=>(it.deviceType||"その他")===dev);
+    return `
+      <div class="care-subgroup">
+        <h4 class="care-subgroup-title">${escapeAttr(dev)}</h4>
+        <div class="care-list">${items.map(it=>careItemCardHTML(it, gi, unlocked)).join("")}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderCareGroups(){
+  const careWrap = document.getElementById("care-groups");
+  if(!careWrap) return;
+  careWrap.innerHTML = "";
+  const unlocked = isTrainerUnlocked();
+  if(!window.__careFilter) window.__careFilter = {};
+
+  state.careLibrary.forEach((g, gi)=>{
+    const div = document.createElement("div");
+    div.className = "care-group";
+
+    let filterBar = "";
+    let visibleItems = g.items;
+    if(g.filterType!=="none"){
+      const tagField = g.filterType==="bodyPart" ? "bodyPart" : "category";
+      const tags = Array.from(new Set(g.items.map(it=>it[tagField]).filter(Boolean)));
+      const current = window.__careFilter[g.key] || "all";
+      filterBar = `<div class="care-filter">
+        <button class="care-filter-btn ${current==='all'?'active':''}" data-care-filter="${g.key}" data-filter-val="all">すべて</button>
+        ${tags.map(t=>`<button class="care-filter-btn ${current===t?'active':''}" data-care-filter="${g.key}" data-filter-val="${escapeAttr(t)}">${escapeAttr(t)}</button>`).join("")}
+      </div>`;
+      if(current!=="all") visibleItems = g.items.filter(it=>it[tagField]===current);
+    }
+
+    div.innerHTML = `
+      <h3>${g.label} ${unlocked ? `<button class="add-row care-add-item" data-care-group-idx="${gi}" style="margin:0 0 0 8px;font-size:10px;padding:4px 8px;">＋ 項目を追加</button>` : ""}</h3>
+      ${g.note ? `<div class="care-group-note">対象：${escapeAttr(g.note)}</div>` : ""}
+      ${filterBar}
+      ${renderCareItemsHTML(visibleItems, gi, unlocked)}
+    `;
+    careWrap.appendChild(div);
+  });
+
+  careWrap.querySelectorAll("[data-care-filter]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      window.__careFilter[btn.dataset.careFilter] = btn.dataset.filterVal;
+      renderCareGroups();
+      attachListeners();
+    });
+  });
+  careWrap.querySelectorAll(".care-add-item").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const gi = Number(btn.dataset.careGroupIdx);
+      const g = state.careLibrary[gi];
+      const name = prompt("種目名");
+      if(!name) return;
+      const time = prompt("秒数・回数など", "30秒") || "";
+      let extra = {};
+      if(g.filterType==="bodyPart"){
+        const bp = prompt("部位タグ（例：首、肩、もも など）") || "";
+        extra.bodyPart = bp;
+      } else if(g.filterType==="category"){
+        const cat = prompt("カテゴリ（上肢／体幹／下肢など）") || "";
+        extra.category = cat;
+      }
+      const who = prompt("対象者メモ（任意）") || "";
+      g.items.push({id:"custom-care-"+Date.now(), name, time, who, ...extra});
+      saveState();
+      renderCareGroups();
+      attachListeners();
+    });
+  });
+  careWrap.querySelectorAll(".care-del-item").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const gi = Number(btn.dataset.careGroupIdx);
+      const id = btn.dataset.careItemId;
+      state.careLibrary[gi].items = state.careLibrary[gi].items.filter(it=>it.id!==id);
+      saveState();
+      renderCareGroups();
+      attachListeners();
+    });
+  });
 }
 
 function renderCareMonthly(){
@@ -1763,11 +2052,11 @@ function renderCareMonthly(){
       <table class="checkgrid">
         <thead><tr><th class="ex-col">グループ</th>${days.map(d=>`<th>${d}</th>`).join("")}</tr></thead>
         <tbody>
-          ${CARE_LIBRARY.map((g,gi)=>{
+          ${state.careLibrary.map((g,gi)=>{
             const rowChecks = state.careChecks[mk][gi] || {};
             const doneCount = days.filter(d=>rowChecks[d]).length;
             return `<tr>
-              <td class="ex-col">${g.group}<br><span class="mono care-pct">${doneCount}/${days.length}日</span></td>
+              <td class="ex-col">${g.label}<br><span class="mono care-pct">${doneCount}/${days.length}日</span></td>
               ${days.map(d=>`<td><button class="chk-cell ${rowChecks[d]?'s-done':''}" data-care-group="${gi}" data-care-day="${d}">${rowChecks[d]?'○':''}</button></td>`).join("")}
             </tr>`;
           }).join("")}
@@ -1984,62 +2273,40 @@ document.getElementById("videoModal").addEventListener("click",(e)=>{
   }
 });
 
-/* ===== メディカルデータ ===== */
-function renderBatchEntry(){
-  const host = document.getElementById("batch-body");
-  if(!host) return;
-  if(!window.__batchDate) window.__batchDate = todayStr();
-
-  const order = ["tanita","medical","sleep","fitness","other"];
-  host.innerHTML = `
-    <div class="batch-date-row">
-      <label>測定日 <input type="date" id="batch-date" value="${window.__batchDate}"></label>
-      <button id="batch-save" class="add-row" style="margin:0;">まとめて保存</button>
-    </div>
-    <div class="batch-groups">
-      ${order.map(cat=>{
-        const metrics = state.medical.metrics.filter(m=>m.category===cat);
-        if(metrics.length===0) return "";
-        return `<div class="batch-group">
-          <h4>${CATEGORY_LABELS[cat]}</h4>
-          <div class="batch-fields">
-            ${metrics.map(m=>`
-              <label class="batch-field">
-                <span>${escapeAttr(m.name)}${m.max?` <em>/${m.max}</em>`:""}</span>
-                ${m.inputType==="symbol"
-                  ? `<select data-batch-metric="${m.id}"><option value="">-</option>${m.options.map(o=>`<option value="${o}">${o}</option>`).join("")}</select>`
-                  : `<input type="number" step="any" data-batch-metric="${m.id}" placeholder="${escapeAttr(m.unit)}">`
-                }
-              </label>
-            `).join("")}
-          </div>
-        </div>`;
-      }).join("")}
-    </div>
-  `;
-  host.querySelector("#batch-date").addEventListener("change",(e)=>{ window.__batchDate = e.target.value; });
-  host.querySelector("#batch-save").addEventListener("click", ()=>{
-    const date = host.querySelector("#batch-date").value || todayStr();
-    let count = 0;
-    host.querySelectorAll("[data-batch-metric]").forEach(input=>{
-      if(input.value===""){ return; }
-      state.medical.records.push({
-        id: "r"+Date.now()+Math.random().toString(36).slice(2,6),
-        metricId: input.dataset.batchMetric,
-        date, value: input.value
-      });
-      count++;
-      input.value = "";
-    });
-    if(count>0){
+function openNoteModal(monthKey, idx){
+  const modal = document.getElementById("noteModal");
+  const body = document.getElementById("noteModalBody");
+  const ex = state.months[monthKey].exercises[idx];
+  const trainerRow = isTrainerUnlocked();
+  body.className = "note-box-body";
+  if(trainerRow){
+    body.innerHTML = `
+      <textarea id="noteEditArea" placeholder="注意点を入力">${escapeAttr(ex.point)}</textarea>
+      <button class="add-row note-save" id="noteSaveBtn" style="margin:0;">保存</button>
+    `;
+    document.getElementById("noteSaveBtn").addEventListener("click", ()=>{
+      ex.point = document.getElementById("noteEditArea").value;
       saveState();
-      renderMedical();
-      renderAnnual();
-      renderTabs();
-    }
-  });
+      renderWeeks();
+      modal.classList.remove("show");
+    });
+  } else {
+    body.innerHTML = `<p>${ex.point ? escapeAttr(ex.point) : "まだ注意点は登録されていません"}</p>`;
+  }
+  modal.classList.add("show");
 }
+document.getElementById("closeNoteModal").addEventListener("click", ()=>{
+  document.getElementById("noteModal").classList.remove("show");
+  document.getElementById("noteModalBody").innerHTML = "";
+});
+document.getElementById("noteModal").addEventListener("click",(e)=>{
+  if(e.target.id==="noteModal"){
+    e.currentTarget.classList.remove("show");
+    document.getElementById("noteModalBody").innerHTML = "";
+  }
+});
 
+/* ===== メディカルデータ ===== */
 function getActiveGoalMetricIds(){
   const ids = new Set();
   let sleepTotal = false, cardioTotal = false;
@@ -2067,8 +2334,10 @@ function buildMetricCard(metric, cat, isGoalActive){
     <div class="metric-card-head">
       <span class="metric-name">${escapeAttr(metric.name)}${isGoalActive ? ' <span class="goal-linked-badge" title="目標設定の対象指標です">🎯 目標設定中</span>' : ''}</span>
       <span class="metric-card-actions">
-        <button class="del-row" data-edit-metric="${metric.id}" title="名称・単位を編集">✎</button>
-        <button class="del-row" data-del-metric="${metric.id}" title="指標を削除">×</button>
+        ${isTrainerUnlocked() ? `
+          <button class="del-row" data-edit-metric="${metric.id}" title="名称・単位を編集">✎</button>
+          <button class="del-row" data-del-metric="${metric.id}" title="指標を削除">×</button>
+        ` : ""}
       </span>
     </div>
     <div class="metric-latest">
@@ -2079,6 +2348,12 @@ function buildMetricCard(metric, cat, isGoalActive){
       <input type="date" class="m-date" value="${todayStr()}">
       ${metric.inputType==="symbol"
         ? `<select class="m-value">${metric.options.map(o=>`<option value="${o}">${o}</option>`).join("")}</select>`
+        : metric.inputType==="breath3"
+        ? `<div class="breath3-inputs">
+             <input type="number" class="breath3-1" placeholder="1回目" step="any" min="0" max="60">
+             <input type="number" class="breath3-2" placeholder="2回目" step="any" min="0" max="60">
+             <input type="number" class="breath3-3" placeholder="3回目" step="any" min="0" max="60">
+           </div>`
         : `<input type="number" class="m-value" placeholder="数値" step="any">`
       }
       <button class="add-row m-add" style="margin:0;">追加</button>
@@ -2109,13 +2384,24 @@ function buildMetricCard(metric, cat, isGoalActive){
 
   card.querySelector(".m-add").addEventListener("click", ()=>{
     const dateEl = card.querySelector(".m-date");
-    const valEl = card.querySelector(".m-value");
-    if(valEl.value===""){ return; }
+    let value;
+    if(metric.inputType==="breath3"){
+      const v1 = card.querySelector(".breath3-1").value;
+      const v2 = card.querySelector(".breath3-2").value;
+      const v3 = card.querySelector(".breath3-3").value;
+      const nums = [v1,v2,v3].filter(v=>v!=="").map(Number);
+      if(nums.length===0) return;
+      value = (nums.reduce((a,b)=>a+b,0)/nums.length).toFixed(1);
+    } else {
+      const valEl = card.querySelector(".m-value");
+      if(valEl.value===""){ return; }
+      value = valEl.value;
+    }
     state.medical.records.push({
       id: "r"+Date.now()+Math.random().toString(36).slice(2,6),
       metricId: metric.id,
       date: dateEl.value || todayStr(),
-      value: valEl.value
+      value: value
     });
     saveState();
     renderMedical();
@@ -2131,7 +2417,8 @@ function buildMetricCard(metric, cat, isGoalActive){
       renderAnnual();
     });
   });
-  card.querySelector("[data-del-metric]").addEventListener("click",()=>{
+  const delMetricBtn = card.querySelector("[data-del-metric]");
+  if(delMetricBtn) delMetricBtn.addEventListener("click",()=>{
     if(state.medical.metrics.length<=1) return;
     state.medical.metrics = state.medical.metrics.filter(m=>m.id!==metric.id);
     state.medical.records = state.medical.records.filter(r=>r.metricId!==metric.id);
@@ -2140,7 +2427,8 @@ function buildMetricCard(metric, cat, isGoalActive){
     renderAnnual();
     renderTabs();
   });
-  card.querySelector("[data-edit-metric]").addEventListener("click",()=>{
+  const editMetricBtn = card.querySelector("[data-edit-metric]");
+  if(editMetricBtn) editMetricBtn.addEventListener("click",()=>{
     const newName = prompt("指標名を編集", metric.name);
     if(newName===null) return;
     const newUnit = prompt("単位を編集", metric.unit);
@@ -2213,13 +2501,12 @@ function renderMedical(){
   renderLesch();
   renderGoalPinned();
   renderChecklists();
-  renderBatchEntry();
 
   const grid = document.getElementById("metric-grid");
   if(!grid) return;
   grid.innerHTML = "";
 
-  const order = ["tanita","medical","sleep","fitness","other"];
+  const order = ["tanita","fitness","other"];
   const {ids: activeGoalMetricIds, sleepTotal: sleepGoalActive} = getActiveGoalMetricIds();
 
   order.forEach(cat=>{
@@ -2262,6 +2549,7 @@ function renderMedical(){
 
   const addBtn = document.getElementById("add-metric-btn");
   if(addBtn){
+    addBtn.style.display = isTrainerUnlocked() ? "" : "none";
     addBtn.onclick = ()=>{
       const name = prompt("指標名（例：ウエスト、垂直跳びなど）");
       if(!name) return;
@@ -2273,6 +2561,11 @@ function renderMedical(){
       renderTabs();
     };
   }
+}
+
+function symbolBadgeHTML(value){
+  const cls = value==="○" ? "sym-good" : value==="△" ? "sym-mid" : value==="✕" ? "sym-bad" : "sym-none";
+  return `<span class="symbol-badge ${cls}">${escapeAttr(value||"")}</span>`;
 }
 
 function comparisonRowHTML(records, metric){
@@ -2290,46 +2583,56 @@ function comparisonRowHTML(records, metric){
       }
       return `<div class="compare-cell">
         <span class="compare-label">${labels[i]}</span>
-        <span class="mono compare-value">${r.value}${escapeAttr(metric.unit)}${arrow}</span>
+        ${isSymbol
+          ? symbolBadgeHTML(r.value)
+          : `<span class="mono compare-value">${r.value}${escapeAttr(metric.unit)}${arrow}</span>`
+        }
         <span class="compare-date">${r.date}</span>
       </div>`;
     }).join("")}
   </div>`;
 }
 
-/* ===== レッシュ理論（足型・重心） ===== */
+/* ===== メディカルチェック／睡眠チェック（詳細採点） ===== */
 function renderChecklists(){
-  const tabsWrap = document.getElementById("checklist-tabs");
-  const bodyWrap = document.getElementById("checklist-body");
-  if(!tabsWrap || !bodyWrap) return;
-  if(!window.__checklistTab) window.__checklistTab = "upper";
-  if(!window.__checklistDate) window.__checklistDate = todayStr();
-  if(!window.__checklistScores) window.__checklistScores = {};
+  renderChecklistSection("medical", ["upper","lower","strength","flex"]);
+  renderChecklistSection("sleep", ["sleepPhase","sleepQuality","sleepQuantity"]);
+}
 
-  const groupIds = Object.keys(CHECKLIST_DEFS);
+function renderChecklistSection(sectionKey, groupIds){
+  const tabsWrap = document.getElementById("checklist-tabs-"+sectionKey);
+  const bodyWrap = document.getElementById("checklist-body-"+sectionKey);
+  if(!tabsWrap || !bodyWrap) return;
+  const tabState = "__checklistTab_"+sectionKey;
+  const dateState = "__checklistDate_"+sectionKey;
+  const scoresState = "__checklistScores_"+sectionKey;
+  if(!window[tabState]) window[tabState] = groupIds[0];
+  if(!window[dateState]) window[dateState] = todayStr();
+  if(!window[scoresState]) window[scoresState] = {};
+
   tabsWrap.innerHTML = groupIds.map(gid=>{
     const def = state.checklists.defs[gid];
-    return `<button class="cl-tab ${window.__checklistTab===gid?'active':''}" data-cl-tab="${gid}">${def.label}</button>`;
+    return `<button class="cl-tab ${window[tabState]===gid?'active':''}" data-cl-tab="${gid}">${def.label}</button>`;
   }).join("");
   tabsWrap.querySelectorAll("[data-cl-tab]").forEach(btn=>{
     btn.addEventListener("click",()=>{
-      window.__checklistTab = btn.dataset.clTab;
-      window.__checklistScores = {};
-      renderChecklists();
+      window[tabState] = btn.dataset.clTab;
+      window[scoresState] = {};
+      renderChecklistSection(sectionKey, groupIds);
     });
   });
 
-  const gid = window.__checklistTab;
+  const gid = window[tabState];
   const def = state.checklists.defs[gid];
-  const scores = window.__checklistScores;
+  const scores = window[scoresState];
   const configuredSum = def.items.reduce((s,it)=>s+Number(it.max||0),0);
   const enteredSum = def.items.reduce((s,it)=> s + (scores[it.id]!==undefined ? Number(scores[it.id]) : 0), 0);
 
   bodyWrap.innerHTML = `
     <div class="cl-summary">
-      <span>目標 <span class="mono">${def.targetMax}点</span></span>
-      <span>現在の配点合計 <span class="mono">${configuredSum}点</span>${configuredSum!==def.targetMax ? ' <em class="cl-warn">（項目の配点を調整すると目標に合わせられます）</em>' : ''}</span>
-      <span>今回の入力合計 <span class="mono lime">${enteredSum}点</span></span>
+      <span class="cl-summary-frac mono">配点 ${configuredSum} / ${def.targetMax}点</span>
+      ${configuredSum!==def.targetMax ? `<em class="cl-warn">項目の配点を調整すると目標に合わせられます</em>` : ""}
+      <span class="cl-summary-frac cl-summary-current mono">今回の入力 <span class="lime">${enteredSum}</span> 点</span>
     </div>
     <div class="cl-items">
       ${def.items.map(it=>{
@@ -2350,19 +2653,20 @@ function renderChecklists(){
         return `
         <div class="cl-item">
           <span class="cl-item-label">${escapeAttr(it.label)}</span>
-          <label class="cl-item-max">配点<input type="number" min="0" step="any" value="${it.max}" data-cl-max="${it.id}"></label>
+          ${isTrainerUnlocked() ? `<label class="cl-item-max">配点<input type="number" min="0" step="any" value="${it.max}" data-cl-max="${it.id}"></label>` : `<span class="cl-item-max-readonly mono">/ ${it.max}</span>`}
           <label class="cl-item-score">採点<input type="number" min="0" max="${it.max}" step="any" placeholder="0-${it.max}" value="${scores[it.id]!==undefined?scores[it.id]:''}" data-cl-score="${it.id}"></label>
         </div>
       `;}).join("")}
     </div>
+    ${isTrainerUnlocked() ? `
     <div class="cl-add-item">
-      <button class="add-row" id="cl-add-item-btn" style="margin:0;">＋ 項目を追加</button>
-    </div>
+      <button class="add-row" id="cl-add-item-btn-${sectionKey}" style="margin:0;">＋ 項目を追加</button>
+    </div>` : ""}
     <div class="cl-save-row">
-      <input type="date" id="cl-date" value="${window.__checklistDate}">
-      <button id="cl-save" class="add-row" style="margin:0;">この採点を保存</button>
+      <input type="date" id="cl-date-${sectionKey}" value="${window[dateState]}">
+      <button id="cl-save-${sectionKey}" class="add-row" style="margin:0;">この採点を保存</button>
     </div>
-    <div class="cl-history" id="cl-history"></div>
+    <div class="cl-history" id="cl-history-${sectionKey}"></div>
   `;
 
   bodyWrap.querySelectorAll("[data-cl-max]").forEach(inp=>{
@@ -2370,7 +2674,7 @@ function renderChecklists(){
       const item = def.items.find(it=>it.id===e.target.dataset.clMax);
       item.max = e.target.value;
       saveState();
-      renderChecklists();
+      renderChecklistSection(sectionKey, groupIds);
     });
   });
   bodyWrap.querySelectorAll("[data-cl-score]").forEach(inp=>{
@@ -2383,19 +2687,20 @@ function renderChecklists(){
     inp.addEventListener("input", handler);
     inp.addEventListener("change", handler);
   });
-  document.getElementById("cl-add-item-btn").addEventListener("click",()=>{
+  const clAddBtn = document.getElementById("cl-add-item-btn-"+sectionKey);
+  if(clAddBtn) clAddBtn.addEventListener("click",()=>{
     const label = prompt("追加する項目名");
     if(!label) return;
     const max = prompt("配点（満点）", "1") || "1";
     def.items.push({id:"custom"+Date.now(), label, max});
     saveState();
-    renderChecklists();
+    renderChecklistSection(sectionKey, groupIds);
   });
-  document.getElementById("cl-date").addEventListener("change",(e)=>{
-    window.__checklistDate = e.target.value || todayStr();
+  document.getElementById("cl-date-"+sectionKey).addEventListener("change",(e)=>{
+    window[dateState] = e.target.value || todayStr();
   });
-  document.getElementById("cl-save").addEventListener("click",()=>{
-    const date = window.__checklistDate;
+  document.getElementById("cl-save-"+sectionKey).addEventListener("click",()=>{
+    const date = window[dateState];
     const total = def.items.reduce((s,it)=> s + (scores[it.id]!==undefined && scores[it.id]!=="" ? Number(scores[it.id]) : 0), 0);
     state.checklists.records.push({
       id:"cl"+Date.now(), groupId: gid, date,
@@ -2406,15 +2711,15 @@ function renderChecklists(){
       id:"r"+Date.now()+Math.random().toString(36).slice(2,6),
       metricId: def.metricId, date, value: String(total)
     });
-    window.__checklistScores = {};
+    window[scoresState] = {};
     saveState();
-    renderChecklists();
+    renderChecklistSection(sectionKey, groupIds);
     renderMedical();
     renderAnnual();
     renderTabs();
   });
 
-  const histWrap = document.getElementById("cl-history");
+  const histWrap = document.getElementById("cl-history-"+sectionKey);
   const groupRecords = state.checklists.records.filter(r=>r.groupId===gid).sort((a,b)=> a.date<b.date?1:-1);
   if(groupRecords.length===0){
     histWrap.innerHTML = `<div class="chart-empty">まだ採点記録がありません</div>`;
@@ -2431,7 +2736,7 @@ function renderChecklists(){
         const id = e.currentTarget.dataset.clDel;
         state.checklists.records = state.checklists.records.filter(r=>r.id!==id);
         saveState();
-        renderChecklists();
+        renderChecklistSection(sectionKey, groupIds);
       });
     });
   }
@@ -3251,7 +3556,7 @@ function render(){
   await loadState();
   if(!activeTab) activeTab = state.monthOrder[0];
   applyTheme();
-  renderThemePicker();
+  renderProfileHeader();
   render();
 })();
 
@@ -3260,43 +3565,35 @@ function applyTheme(){
   document.documentElement.style.setProperty("--lime-dim", state.theme.dim);
 }
 
-function renderThemePicker(){
-  const wrap = document.getElementById("themePicker");
-  wrap.innerHTML = THEME_PRESETS.map(p=>`
-    <button class="swatch ${state.theme.accent===p.accent?'active':''}" title="${p.name}" style="--sw:${p.accent}" data-accent="${p.accent}" data-dim="${p.dim}"></button>
-  `).join("") + `<label class="swatch custom" title="カスタムカラー" style="--sw:${state.theme.accent}">
-      <input type="color" id="customColor" value="${state.theme.accent}">
-    </label>`;
-  wrap.querySelectorAll(".swatch[data-accent]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      state.theme.accent = btn.dataset.accent;
-      state.theme.dim = btn.dataset.dim;
-      applyTheme();
-      saveState();
-      renderThemePicker();
-    });
-  });
-  const custom = document.getElementById("customColor");
-  custom.addEventListener("input", (e)=>{
-    state.theme.accent = e.target.value;
-    state.theme.dim = shade(e.target.value, -30);
-    applyTheme();
-  });
-  custom.addEventListener("change", ()=>{
-    saveState();
-    renderThemePicker();
-  });
-}
+function renderProfileHeader(){
+  const nameInput = document.getElementById("memberNameInput");
+  const joinInput = document.getElementById("joinDateInput");
+  const monthsEl = document.getElementById("memberMonths");
+  if(!nameInput) return;
 
-function shade(hex, percent){
-  const num = parseInt(hex.replace("#",""),16);
-  let r = (num>>16) + Math.round(2.55*percent);
-  let g = ((num>>8)&0x00FF) + Math.round(2.55*percent);
-  let b = (num&0x0000FF) + Math.round(2.55*percent);
-  r = Math.max(0,Math.min(255,r));
-  g = Math.max(0,Math.min(255,g));
-  b = Math.max(0,Math.min(255,b));
-  return "#" + (0x1000000 + r*0x10000 + g*0x100 + b).toString(16).slice(1);
+  nameInput.value = state.profile.name || "";
+  joinInput.value = state.profile.joinDate || "";
+  updateMonthsBadge();
+
+  nameInput.addEventListener("change",(e)=>{
+    state.profile.name = e.target.value;
+    saveState();
+  });
+  joinInput.addEventListener("change",(e)=>{
+    state.profile.joinDate = e.target.value;
+    saveState();
+    updateMonthsBadge();
+  });
+
+  function updateMonthsBadge(){
+    if(!state.profile.joinDate){ monthsEl.textContent = ""; return; }
+    const start = new Date(state.profile.joinDate+"T00:00:00");
+    const now = new Date();
+    let months = (now.getFullYear()-start.getFullYear())*12 + (now.getMonth()-start.getMonth());
+    if(now.getDate() < start.getDate()) months--;
+    months = Math.max(0, months);
+    monthsEl.textContent = `継続 ${months}ヶ月目`;
+  }
 }
 </script>
 </body>
