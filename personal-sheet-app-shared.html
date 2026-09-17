@@ -325,7 +325,7 @@
     border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;
     margin-bottom:10px;font-size:12px;
   }
-  .total-card .total-value{color:var(--lime);font-size:14px;}
+  .total-card .total-value{color:var(--lime);font-size:19px;font-weight:800;}
   .metric-grid-inner{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
   .metric-card{
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;
@@ -339,7 +339,7 @@
   .metric-name{font-size:13px;font-weight:600;}
   .metric-card-actions{display:flex;gap:2px;flex:none;}
   .metric-latest{display:flex;align-items:baseline;gap:6px;margin-bottom:8px;}
-  .metric-latest .big-num{font-size:28px;color:var(--lime);}
+  .metric-latest .big-num{font-size:34px;color:var(--lime);font-weight:800;}
   .metric-latest .unit{font-size:12px;color:var(--ink-dim);}
   .metric-chart{margin-bottom:10px;min-height:40px;}
   .chart-empty{color:var(--ink-dim);font-size:12px;padding:10px 0;}
@@ -483,7 +483,7 @@
     border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;
   }
   .goalmetric-vals{display:flex;gap:16px;font-size:12px;color:var(--ink-dim);margin-bottom:8px;}
-  .goalmetric-vals .lime{color:var(--lime);}
+  .goalmetric-vals .lime{color:var(--lime);font-size:16px;font-weight:800;}
   .goalmetric-add{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
   .goalmetric-add input{
     background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
@@ -492,7 +492,7 @@
   .goalmetric-note{font-size:11px;color:var(--ink-dim);margin-top:8px;font-style:italic;}
   .ach-wrap{margin-bottom:10px;}
   .ach-head{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-dim);margin-bottom:5px;}
-  .ach-pct{color:var(--lime);font-size:13px;}
+  .ach-pct{color:var(--lime);font-size:20px;font-weight:800;}
   .ach-bar-track{height:8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;}
   .ach-bar-fill{height:100%;background:var(--lime);border-radius:999px;transition:width .3s ease;}
   .ach-empty{font-size:11px;color:var(--ink-dim);margin-bottom:10px;}
@@ -600,7 +600,7 @@
   }
   .cl-tab.active{border-color:var(--lime);color:var(--ink);background:color-mix(in srgb, var(--lime) 10%, transparent);}
   .cl-summary{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--ink-dim);margin-bottom:12px;}
-  .cl-summary-frac{font-size:14px;color:var(--ink);}
+  .cl-summary-frac{font-size:18px;color:var(--ink);font-weight:800;}
   .cl-summary-current{color:var(--ink-dim);font-size:12px;}
   .cl-summary-current .lime{color:var(--lime);font-weight:700;}
   .cl-summary .lime{color:var(--lime);}
@@ -652,6 +652,57 @@
     padding:3px 8px;border-radius:6px;
   }
   .diet-memo{font-size:12px;color:var(--ink);margin-top:6px;}
+
+  /* 初回登録・ログイン用の全画面案内 */
+  .auth-overlay{
+    display:none;position:fixed;inset:0;z-index:200;
+    background:
+      radial-gradient(ellipse 900px 600px at 15% -10%, rgba(108,194,74,0.18), transparent 60%),
+      linear-gradient(165deg, #141c10 0%, #10150F 45%, #0c100b 100%);
+    align-items:center;justify-content:center;padding:20px;overflow-y:auto;
+  }
+  .auth-overlay.show{display:flex;}
+  .auth-card{
+    width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);
+    border-radius:16px;padding:32px 26px;text-align:center;
+    box-shadow:0 12px 40px rgba(0,0,0,0.5);
+  }
+  .auth-icon{color:var(--lime);margin-bottom:14px;display:flex;justify-content:center;}
+  .auth-title{font-size:20px;margin:0 0 8px;color:var(--ink);}
+  .auth-sub{font-size:13px;color:var(--ink-dim);margin:0 0 22px;line-height:1.6;}
+  .auth-btn-group{display:flex;flex-direction:column;gap:10px;}
+  .auth-big-btn{
+    width:100%;padding:16px;border-radius:12px;font-size:16px;font-weight:700;
+    border:1.5px solid var(--line);background:var(--surface-2);color:var(--ink);cursor:pointer;
+  }
+  .auth-big-btn.auth-primary{background:var(--lime);color:var(--bg);border-color:var(--lime);}
+  .auth-big-btn:active{transform:scale(0.98);}
+  .auth-pin-input{
+    width:100%;padding:16px;margin-bottom:12px;border-radius:12px;font-size:20px;text-align:center;
+    letter-spacing:0.1em;background:var(--surface-2);border:1.5px solid var(--line);color:var(--ink);
+    font-family:"SFMono-Regular",monospace;
+  }
+  .auth-text-btn{
+    background:none;border:none;color:var(--ink-dim);font-size:12px;text-decoration:underline;
+    cursor:pointer;margin-top:14px;
+  }
+  .auth-id-box{
+    background:var(--surface-2);border:1px solid var(--lime-dim);border-radius:10px;
+    padding:14px;margin-bottom:12px;text-align:left;
+  }
+  .auth-id-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:6px;}
+  .auth-id-row:last-child{margin-bottom:0;}
+  .auth-id-row span{color:var(--ink-dim);font-size:12px;}
+  .auth-id-row b{font-family:"SFMono-Regular",monospace;font-size:18px;color:var(--lime);}
+  .auth-url-box{
+    font-family:"SFMono-Regular",monospace;font-size:11px;color:var(--ink-dim);
+    word-break:break-all;text-align:left;
+  }
+  .auth-note{font-size:12px;color:var(--ink-dim);line-height:1.6;margin:0 0 10px;}
+  .auth-line-link{
+    display:block;margin-top:22px;padding-top:16px;border-top:1px solid var(--line);
+    color:#06C755;font-size:13px;font-weight:700;text-decoration:none;
+  }
 
   footer.note{margin-top:24px;font-size:11px;color:var(--ink-dim);line-height:1.7;border-top:1px solid var(--line);padding-top:12px;}
   .save-tick{position:fixed;bottom:16px;right:16px;background:var(--surface-2);border:1px solid var(--lime);
@@ -945,34 +996,148 @@ async function unlockTrainer(){
 }
 
 /* 会員ごとのID・暗証番号。初めての人はその場で新規発行し、必ず控えてもらう。
-   2回目以降は、その端末に保存された内容を自動で使う。 */
-function getMemberCreds(){
+   2回目以降は、その端末に保存された内容を自動で使う。
+   ポップアップではなく、専用の全画面案内で行う。 */
+function getAuthOverlay(){
+  let el = document.getElementById("authOverlay");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "authOverlay";
+    el.className = "auth-overlay";
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+const LINE_HELP_LINK = `<a class="auth-line-link" href="https://lin.ee/r3R4ddf" target="_blank" rel="noopener">💬 不明な点は公式LINEへ</a>`;
+
+function authScreenShell(iconSvg, title, sub, bodyHtml){
+  return `
+    <div class="auth-card">
+      <div class="auth-icon">${iconSvg}</div>
+      <h2 class="auth-title">${title}</h2>
+      ${sub ? `<p class="auth-sub">${sub}</p>` : ""}
+      ${bodyHtml}
+      ${LINE_HELP_LINK}
+    </div>
+  `;
+}
+
+const ICON_WAVE = `<svg viewBox="0 0 48 48" width="44" height="44"><circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="2.5" opacity="0.35"/><path d="M14 26c2-6 4-9 6-9s3 4 4 8 2 8 4 8 4-3 6-9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_LOCK = `<svg viewBox="0 0 48 48" width="40" height="40"><rect x="12" y="22" width="24" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M17 22v-6a7 7 0 0 1 14 0v6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="31" r="2.5" fill="currentColor"/></svg>`;
+const ICON_CARD = `<svg viewBox="0 0 48 48" width="40" height="40"><rect x="7" y="12" width="34" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="7" y1="19" x2="41" y2="19" stroke="currentColor" stroke-width="2.5"/><line x1="12" y1="28" x2="24" y2="28" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+const ICON_WARN = `<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 8 L43 39 H5 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><line x1="24" y1="20" x2="24" y2="29" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="34" r="1.8" fill="currentColor"/></svg>`;
+
+function renderAuthWelcome(resolve){
+  const overlay = getAuthOverlay();
+  overlay.innerHTML = authScreenShell(ICON_WAVE, "ようこそ",
+    "はじめてこのアプリを使いますか？",
+    `<div class="auth-btn-group">
+      <button class="auth-big-btn auth-primary" id="authNewBtn">🆕 はじめてです</button>
+      <button class="auth-big-btn" id="authExistingBtn">🔑 登録済みです</button>
+    </div>`);
+  overlay.classList.add("show");
+  document.getElementById("authNewBtn").addEventListener("click", ()=> renderAuthNew(resolve));
+  document.getElementById("authExistingBtn").addEventListener("click", ()=> renderAuthExisting(resolve));
+}
+
+function renderAuthNew(resolve){
+  const overlay = getAuthOverlay();
+  const id = "m" + Math.random().toString(36).slice(2,8);
+  overlay.innerHTML = authScreenShell(ICON_LOCK, "暗証番号を決めてください",
+    "次回から本人確認に使います。数字4桁がおすすめです。",
+    `<input type="text" inputmode="numeric" class="auth-pin-input" id="authNewPin" placeholder="例：1234" maxlength="8">
+     <button class="auth-big-btn auth-primary" id="authNewSubmit">はじめる</button>`);
+  overlay.classList.add("show");
+  document.getElementById("authNewSubmit").addEventListener("click", ()=>{
+    const pin = document.getElementById("authNewPin").value.trim() || "0000";
+    localStorage.setItem("ps-member-id", id);
+    localStorage.setItem("ps-member-pin", pin);
+    renderAuthDone(resolve, id, pin);
+  });
+}
+
+function renderAuthDone(resolve, id, pin){
+  const overlay = getAuthOverlay();
+  const bookmarkUrl = location.origin + location.pathname + "?member=" + encodeURIComponent(id);
+  overlay.innerHTML = authScreenShell(ICON_CARD, "登録できました！",
+    "この2つは必ず控えてください。他の端末で開くときに必要です。",
+    `<div class="auth-id-box">
+      <div class="auth-id-row"><span>あなたのID</span><b>${escapeAttr(id)}</b></div>
+      <div class="auth-id-row"><span>暗証番号</span><b>${escapeAttr(pin)}</b></div>
+    </div>
+    <p class="auth-note">下のリンクをブックマーク／ホーム画面に追加しておくと、次回から開きやすくなります。</p>
+    <div class="auth-id-box auth-url-box">${escapeAttr(bookmarkUrl)}</div>
+    <button class="auth-big-btn auth-primary" id="authDoneBtn">アプリを始める</button>`);
+  document.getElementById("authDoneBtn").addEventListener("click", ()=>{
+    overlay.classList.remove("show");
+    resolve({id, pin});
+  });
+}
+
+function renderAuthExisting(resolve){
+  const overlay = getAuthOverlay();
+  overlay.innerHTML = authScreenShell(ICON_LOCK, "おかえりなさい",
+    "ご自身のIDと暗証番号を入力してください。",
+    `<input type="text" class="auth-pin-input" id="authExistId" placeholder="ID">
+     <input type="text" inputmode="numeric" class="auth-pin-input" id="authExistPin" placeholder="暗証番号" maxlength="8">
+     <button class="auth-big-btn auth-primary" id="authExistSubmit">ログインする</button>
+     <button class="auth-text-btn" id="authBackBtn">戻る</button>`);
+  overlay.classList.add("show");
+  document.getElementById("authExistSubmit").addEventListener("click", ()=>{
+    const id = document.getElementById("authExistId").value.trim() || ("guest-"+Math.random().toString(36).slice(2,6));
+    const pin = document.getElementById("authExistPin").value.trim();
+    localStorage.setItem("ps-member-id", id);
+    localStorage.setItem("ps-member-pin", pin);
+    overlay.classList.remove("show");
+    resolve({id, pin});
+  });
+  document.getElementById("authBackBtn").addEventListener("click", ()=> renderAuthWelcome(resolve));
+}
+
+function resolveMemberCreds(){
   const urlId = new URLSearchParams(location.search).get("member");
   if(urlId){
     localStorage.setItem("ps-member-id", urlId);
-    return {id: urlId, pin: localStorage.getItem("ps-member-pin") || ""};
+    return Promise.resolve({id: urlId, pin: localStorage.getItem("ps-member-pin") || ""});
   }
-  let id = localStorage.getItem("ps-member-id");
-  let pin = localStorage.getItem("ps-member-pin");
-  if(!id){
-    const isNew = confirm("はじめてこのアプリを使いますか？\n\n「OK」＝はじめて\n「キャンセル」＝登録済み（IDと暗証番号を入力）");
-    if(isNew){
-      id = "m" + Math.random().toString(36).slice(2,8);
-      pin = prompt("4桁など、お好きな暗証番号を決めてください（次回から必要です）", "") || "0000";
-      alert(`あなたのID： ${id}\nあなたの暗証番号： ${pin}\n\nこの2つを必ず控えてください。他の端末で開くときに必要になります。`);
-    } else {
-      id = prompt("あなたのIDを入力してください", "") || ("guest-"+Math.random().toString(36).slice(2,6));
-      pin = prompt("暗証番号を入力してください", "") || "";
-    }
-    localStorage.setItem("ps-member-id", id);
-    localStorage.setItem("ps-member-pin", pin);
+  const id = localStorage.getItem("ps-member-id");
+  const pin = localStorage.getItem("ps-member-pin");
+  if(id){
+    return Promise.resolve({id, pin: pin || ""});
   }
-  return {id, pin};
+  return new Promise(resolve=>{ renderAuthWelcome(resolve); });
 }
 
-const _creds = SYNC_ENABLED ? getMemberCreds() : {id:"local", pin:""};
-const MEMBER_ID = _creds.id;
-const MEMBER_PIN = _creds.pin;
+function showPinRetryScreen(){
+  return new Promise(resolve=>{
+    const overlay = getAuthOverlay();
+    overlay.innerHTML = authScreenShell(ICON_WARN, "暗証番号が確認できません",
+      "もう一度、ご自身の暗証番号を入力してください。",
+      `<input type="text" inputmode="numeric" class="auth-pin-input" id="authRetryPin" placeholder="暗証番号" maxlength="8">
+       <button class="auth-big-btn auth-primary" id="authRetrySubmit">再試行する</button>
+       <button class="auth-text-btn" id="authResetBtn">暗証番号がわからない（新しく登録し直す）</button>`);
+    overlay.classList.add("show");
+    document.getElementById("authRetrySubmit").addEventListener("click", ()=>{
+      const pin = document.getElementById("authRetryPin").value.trim();
+      if(!pin) return;
+      MEMBER_PIN = pin;
+      localStorage.setItem("ps-member-pin", pin);
+      overlay.classList.remove("show");
+      resolve(true);
+    });
+    document.getElementById("authResetBtn").addEventListener("click", ()=>{
+      if(confirm("これまでのデータには戻れなくなります。新しく登録し直しますか？")){
+        localStorage.removeItem("ps-member-id");
+        localStorage.removeItem("ps-member-pin");
+        location.reload();
+      }
+    });
+  });
+}
+
+let MEMBER_ID = "local";
+let MEMBER_PIN = "";
 const STAFF_PIN = localStorage.getItem("ps-staff-pin") || "";
 
 function scopedKey(key, shared){
@@ -980,56 +1145,76 @@ function scopedKey(key, shared){
   return "member::" + MEMBER_ID + "::" + key;
 }
 
-function handlePinError(data){
-  if(data && data.error && String(data.error).indexOf("暗証番号")>=0){
-    alert("暗証番号が正しくありません。もう一度、ご自身のID・暗証番号を入力し直してください。");
-    localStorage.removeItem("ps-member-id");
-    localStorage.removeItem("ps-member-pin");
-    location.reload();
-    return true;
-  }
-  return false;
+function isPinError(data){
+  return !!(data && data.error && String(data.error).indexOf("暗証番号")>=0);
+}
+
+/* 暗証番号が合わなかった時、いきなり全部リセットせず、まずは入力し直すチャンスを与える。
+   それでも合わない場合だけ、本人の同意を得てから最初からやり直す。 */
+async function recoverFromPinError(){
+  return await showPinRetryScreen();
 }
 
 if(SYNC_ENABLED){
   window.storage = {
     async get(key, shared){
       const k = scopedKey(key, shared);
-      const params = new URLSearchParams({action:"get", key:k, pin: MEMBER_PIN});
-      if(STAFF_PIN) params.set("staffPin", STAFF_PIN);
-      const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
-      const data = await res.json();
-      if(handlePinError(data)) throw new Error("pin error");
-      if(data.error) throw new Error(data.error);
-      if(!data.found) throw new Error("not found: "+k);
-      return {key, value: data.value, shared: !!shared};
+      for(let attempt=0; attempt<2; attempt++){
+        const params = new URLSearchParams({action:"get", key:k, pin: MEMBER_PIN});
+        if(STAFF_PIN) params.set("staffPin", STAFF_PIN);
+        const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+        const data = await res.json();
+        if(isPinError(data)){
+          const shouldRetry = await recoverFromPinError();
+          if(shouldRetry) continue;
+          throw new Error("pin error");
+        }
+        if(data.error) throw new Error(data.error);
+        if(!data.found) throw new Error("not found: "+k);
+        return {key, value: data.value, shared: !!shared};
+      }
+      throw new Error("pin error");
     },
     async set(key, value, shared){
       const k = scopedKey(key, shared);
-      const body = {action:"set", key:k, value, pin: MEMBER_PIN};
-      if(STAFF_PIN) body.staffPin = STAFF_PIN;
-      const res = await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: {"Content-Type":"text/plain;charset=utf-8"}, // プリフライトを避けるため text/plain で送信
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if(handlePinError(data)) throw new Error("pin error");
-      if(data.error) throw new Error(data.error);
-      return {key, value, shared: !!shared};
+      for(let attempt=0; attempt<2; attempt++){
+        const body = {action:"set", key:k, value, pin: MEMBER_PIN};
+        if(STAFF_PIN) body.staffPin = STAFF_PIN;
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: {"Content-Type":"text/plain;charset=utf-8"}, // プリフライトを避けるため text/plain で送信
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if(isPinError(data)){
+          const shouldRetry = await recoverFromPinError();
+          if(shouldRetry) continue;
+          throw new Error("pin error");
+        }
+        if(data.error) throw new Error(data.error);
+        return {key, value, shared: !!shared};
+      }
+      throw new Error("pin error");
     },
     async delete(key, shared){
       const k = scopedKey(key, shared);
-      const body = {action:"delete", key:k, pin: MEMBER_PIN};
-      if(STAFF_PIN) body.staffPin = STAFF_PIN;
-      const res = await fetch(SCRIPT_URL, {
-        method:"POST",
-        headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if(handlePinError(data)) throw new Error("pin error");
-      return {key, deleted:true, shared: !!shared};
+      for(let attempt=0; attempt<2; attempt++){
+        const body = {action:"delete", key:k, pin: MEMBER_PIN};
+        if(STAFF_PIN) body.staffPin = STAFF_PIN;
+        const res = await fetch(SCRIPT_URL, {
+          method:"POST",
+          headers:{"Content-Type":"text/plain;charset=utf-8"},
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if(isPinError(data)){
+          const shouldRetry = await recoverFromPinError();
+          if(shouldRetry) continue;
+          throw new Error("pin error");
+        }
+        return {key, deleted:true, shared: !!shared};
+      }
+      throw new Error("pin error");
     },
     async list(prefix, shared){
       const p = scopedKey(prefix||"", shared);
@@ -1749,13 +1934,13 @@ function renderTabs(){
     ["cardio","care"],
   ];
   const recordMeta = {
-    cardio: {label:"有酸素", num:String(state.cardio.length)},
-    medical: {label:"メディカルデータ", num:String(state.medical.metrics.length)},
-    annual: {label:"年間データ", num:"📈"},
-    goals: {label:"目標設定", num:"🎯"},
-    karte: {label:"カルテ", num:String(state.karte.length)},
-    diet: {label:"食事", num:String(state.diet.length)},
-    care: {label:"ケア＆ストレッチ", num:"＋"},
+    cardio: {label:"🏃 有酸素", num:String(state.cardio.length)},
+    medical: {label:"🩺 メディカルデータ", num:String(state.medical.metrics.length)},
+    annual: {label:"📈 年間データ", num:"📈"},
+    goals: {label:"🎯 目標設定", num:"🎯"},
+    karte: {label:"📋 カルテ", num:String(state.karte.length)},
+    diet: {label:"🍚 食事", num:String(state.diet.length)},
+    care: {label:"🧘 ケア＆ストレッチ", num:"＋"},
   };
   const barIds = ["tabbar2a","tabbar2b","tabbar2c"];
   rowDefs.forEach((row,i)=>{
@@ -3553,6 +3738,12 @@ function render(){
 }
 
 (async function init(){
+  if(SYNC_ENABLED){
+    const creds = await resolveMemberCreds();
+    MEMBER_ID = creds.id;
+    MEMBER_PIN = creds.pin;
+    renderMemberBadge();
+  }
   await loadState();
   if(!activeTab) activeTab = state.monthOrder[0];
   applyTheme();
