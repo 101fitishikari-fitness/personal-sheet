@@ -82,6 +82,17 @@
     padding:3px 9px;border-radius:999px;border:1px solid var(--lime-dim);white-space:nowrap;
   }
 
+  .visibility-panel{
+    display:none;background:var(--surface);border:1px solid var(--lime-dim);border-radius:10px;
+    padding:12px 14px;margin-bottom:16px;
+  }
+  .visibility-panel.show{display:block;}
+  .visibility-head{font-size:12px;color:var(--ink-dim);margin-bottom:8px;}
+  .visibility-head b{color:var(--lime);font-family:"SFMono-Regular",monospace;}
+  .visibility-toggles{display:flex;flex-wrap:wrap;gap:12px;}
+  .visibility-toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink);cursor:pointer;}
+  .visibility-toggle input{accent-color:var(--lime);width:16px;height:16px;cursor:pointer;}
+
   /* tabs */
   .tabbar-2{margin-top:-8px;}
   .tabbar-2 + .tabbar-2{margin-top:8px;}
@@ -742,6 +753,8 @@
       <div class="sub">個別トレーニングプログラム ｜ 進捗トラッカー</div>
     </div>
   </header>
+
+  <div class="visibility-panel" id="visibilityPanel"></div>
 
   <div class="tabbar" id="tabbar"></div>
   <div class="tabbar tabbar-2" id="tabbar2a"></div>
@@ -1682,6 +1695,7 @@ function defaultState(){
     karteProfile: {history:"", allergies:"", surgeries:[]},
     painRecords: {},
     profile: {name:"", joinDate:""},
+    tabVisibility: {medical:false, annual:false, goals:false, karte:false, diet:false},
     theme: {accent: THEME_PRESETS[0].accent, dim: THEME_PRESETS[0].dim}
   };
 }
@@ -1839,6 +1853,7 @@ async function loadState(){
       });
       if(!state.theme) state.theme = {accent: THEME_PRESETS[0].accent, dim: THEME_PRESETS[0].dim};
       if(!state.profile) state.profile = {name:"", joinDate:""};
+      if(!state.tabVisibility) state.tabVisibility = {medical:false, annual:false, goals:false, karte:false, diet:false};
 
       // migrate old week-based training data (state.weeks) into month-based state.months
       if(!state.months){
@@ -1894,8 +1909,14 @@ function pct(monthKey){
 
 const STAFF_ONLY_TABS = ["medical","annual","goals","karte","diet"];
 
+function canSeeTab(id){
+  if(!STAFF_ONLY_TABS.includes(id)) return true;
+  if(isTrainerUnlocked()) return true;
+  return !!(state.tabVisibility && state.tabVisibility[id]);
+}
+
 function renderTabs(){
-  if(STAFF_ONLY_TABS.includes(activeTab) && !isTrainerUnlocked()){
+  if(STAFF_ONLY_TABS.includes(activeTab) && !canSeeTab(activeTab)){
     activeTab = state.monthOrder[0];
   }
   const bar = document.getElementById("tabbar");
@@ -1927,10 +1948,9 @@ function renderTabs(){
   };
   bar.appendChild(addBtn);
 
-  const unlocked = isTrainerUnlocked();
   const rowDefs = [
-    ["medical","annual","goals","karte"].filter(id=> unlocked || !STAFF_ONLY_TABS.includes(id)),
-    ["diet"].filter(id=> unlocked || !STAFF_ONLY_TABS.includes(id)),
+    ["medical","annual","goals","karte"].filter(id=> canSeeTab(id)),
+    ["diet"].filter(id=> canSeeTab(id)),
     ["cardio","care"],
   ];
   const recordMeta = {
@@ -3728,6 +3748,7 @@ function setActivePanel(){
 
 function render(){
   renderTabs();
+  renderVisibilityPanel();
   renderWeeks();
   renderMedical();
   renderAnnual();
@@ -3735,6 +3756,39 @@ function render(){
   renderKarte();
   renderDiet();
   setActivePanel();
+}
+
+function renderVisibilityPanel(){
+  const host = document.getElementById("visibilityPanel");
+  if(!host) return;
+  if(!isTrainerUnlocked()){
+    host.innerHTML = "";
+    host.classList.remove("show");
+    return;
+  }
+  host.classList.add("show");
+  const labels = {
+    medical:"🩺 メディカルデータ", annual:"📈 年間データ", goals:"🎯 目標設定",
+    karte:"📋 カルテ", diet:"🍚 食事"
+  };
+  host.innerHTML = `
+    <div class="visibility-head">この会員（<b>${escapeAttr(MEMBER_ID)}</b>）に表示するタブ</div>
+    <div class="visibility-toggles">
+      ${STAFF_ONLY_TABS.map(id=>`
+        <label class="visibility-toggle">
+          <input type="checkbox" data-vis-id="${id}" ${state.tabVisibility[id] ? "checked":""}>
+          <span>${labels[id]}</span>
+        </label>
+      `).join("")}
+    </div>
+  `;
+  host.querySelectorAll("[data-vis-id]").forEach(cb=>{
+    cb.addEventListener("change",(e)=>{
+      state.tabVisibility[e.target.dataset.visId] = e.target.checked;
+      saveState();
+      renderTabs();
+    });
+  });
 }
 
 (async function init(){
