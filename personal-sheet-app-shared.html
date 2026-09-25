@@ -953,11 +953,22 @@
   .member-list-head button{background:none;border:none;color:#8CA292;font-size:18px;cursor:pointer;}
   .member-list-body{overflow-y:auto;padding:8px;}
   .member-list-item{
-    display:block;width:100%;text-align:left;background:#1F2B22;border:1px solid #28352C;
+    display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;width:100%;text-align:left;background:#1F2B22;border:1px solid #28352C;
     color:#EAF0E6;border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;cursor:pointer;
   }
+  .member-list-row{display:flex;gap:6px;align-items:stretch;}
+  .member-list-row .member-list-item{margin-bottom:6px;flex:1;}
+  .member-list-edit-name{
+    flex:none;background:#1F2B22;border:1px solid #28352C;color:#8CA292;
+    border-radius:8px;width:36px;font-size:13px;cursor:pointer;margin-bottom:6px;
+  }
+  .member-list-edit-name:hover{border-color:#6CC24A;color:#6CC24A;}
   .member-list-item:hover{border-color:#6CC24A;}
   .member-list-item.current{border-color:#6CC24A;color:#6CC24A;}
+  .member-list-name{font-weight:700;}
+  .member-list-id{font-size:11px;color:#8CA292;}
+  .member-list-noname{font-size:11px;color:#8CA292;font-style:italic;}
+  .member-list-current{margin-left:auto;font-size:10px;color:#6CC24A;}
   .member-list-empty{color:#8CA292;font-size:12px;padding:20px;text-align:center;}
   .member-list-add{
     display:flex;gap:6px;padding:10px 12px;border-top:1px solid #28352C;
@@ -1254,6 +1265,67 @@ function switchToMember(id){
   location.href = location.pathname + "?member=" + encodeURIComponent(id);
 }
 
+/* 会員名簿：会員ID→お名前 の対応を共有データとして保持する。
+   会員がヘッダーで名前を編集するたびに、ここへも反映する。 */
+async function syncMemberDirectory(){
+  try{
+    let dir = {};
+    try{
+      const res = await window.storage.get("member-directory", true);
+      dir = JSON.parse(res.value || "{}");
+    }catch(e){ dir = {}; }
+    dir[MEMBER_ID] = state.profile.name || "";
+    await window.storage.set("member-directory", JSON.stringify(dir), true);
+  }catch(e){
+    // 名簿更新に失敗しても、本人のデータ保存自体は既に完了しているので無視してよい
+  }
+}
+
+async function fetchMemberDirectory(){
+  try{
+    const res = await window.storage.get("member-directory", true);
+    return JSON.parse(res.value || "{}");
+  }catch(e){
+    return {};
+  }
+}
+
+/* 特定の会員IDのデータを、現在切り替えていなくても直接読み書きするための補助関数
+   （スタッフの合言葉があれば、staffPinでその会員の暗証番号チェックをバイパスできる） */
+async function fetchMemberBlobRaw(id){
+  const key = "member::" + id + "::personal-sheet-program-v1";
+  const params = new URLSearchParams({action:"get", key});
+  if(STAFF_PIN) params.set("staffPin", STAFF_PIN);
+  const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+  const data = await res.json();
+  if(!data.found) return null;
+  try{ return JSON.parse(data.value); }catch(e){ return null; }
+}
+async function saveMemberBlobRaw(id, blob){
+  const key = "member::" + id + "::personal-sheet-program-v1";
+  const body = {action:"set", key, value: JSON.stringify(blob)};
+  if(STAFF_PIN) body.staffPin = STAFF_PIN;
+  await fetch(SCRIPT_URL, {
+    method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify(body)
+  });
+}
+async function setMemberNameFromTrainer(id, name){
+  const blob = await fetchMemberBlobRaw(id);
+  if(blob){
+    if(!blob.profile) blob.profile = {name:"", joinDate:""};
+    blob.profile.name = name;
+    await saveMemberBlobRaw(id, blob);
+  }
+  let dir = {};
+  try{
+    const res = await window.storage.get("member-directory", true);
+    dir = JSON.parse(res.value || "{}");
+  }catch(e){ dir = {}; }
+  dir[id] = name;
+  await window.storage.set("member-directory", JSON.stringify(dir), true);
+}
+
 async function openMemberListModal(){
   if(!isTrainerUnlocked()) return;
   const modal = document.getElementById("memberListModal");
@@ -1261,18 +1333,36 @@ async function openMemberListModal(){
   modal.classList.add("show");
   body.innerHTML = `<div class="member-list-empty">読み込み中…</div>`;
   try{
-    const ids = await fetchAllMemberIds();
+    const [ids, dir] = await Promise.all([fetchAllMemberIds(), fetchMemberDirectory()]);
     if(ids.length===0){
       body.innerHTML = `<div class="member-list-empty">まだ登録された会員がいません</div>`;
       return;
     }
-    body.innerHTML = ids.map(id=>`
-      <button class="member-list-item ${id===MEMBER_ID ? 'current' : ''}" data-member-id="${id}">
-        ${id}${id===MEMBER_ID ? '（現在表示中）' : ''}
-      </button>
-    `).join("");
+    body.innerHTML = ids.map(id=>{
+      const name = dir[id];
+      return `
+      <div class="member-list-row">
+        <button class="member-list-item ${id===MEMBER_ID ? 'current' : ''}" data-member-id="${id}">
+          ${name ? `<span class="member-list-name">${escapeAttr(name)}</span><span class="member-list-id mono">${id}</span>` : `<span class="member-list-id mono">${id}</span><span class="member-list-noname">（名前未設定）</span>`}
+          ${id===MEMBER_ID ? '<span class="member-list-current">現在表示中</span>' : ''}
+        </button>
+        <button class="member-list-edit-name" data-edit-name-id="${id}" data-edit-name-cur="${escapeAttr(name||"")}" title="名前を編集">✎</button>
+      </div>
+    `;}).join("");
     body.querySelectorAll("[data-member-id]").forEach(btn=>{
       btn.addEventListener("click", ()=> switchToMember(btn.dataset.memberId));
+    });
+    body.querySelectorAll("[data-edit-name-id]").forEach(btn=>{
+      btn.addEventListener("click", async (e)=>{
+        e.stopPropagation();
+        const id = btn.dataset.editNameId;
+        const cur = btn.dataset.editNameCur;
+        const newName = prompt(`「${id}」さんの名前を入力してください`, cur);
+        if(newName===null) return;
+        btn.disabled = true;
+        await setMemberNameFromTrainer(id, newName);
+        openMemberListModal();
+      });
     });
   }catch(e){
     body.innerHTML = `<div class="member-list-empty">読み込みに失敗しました。SCRIPT_URLの設定をご確認ください。</div>`;
@@ -3823,6 +3913,7 @@ function renderProfileHeader(){
   nameInput.addEventListener("change",(e)=>{
     state.profile.name = e.target.value;
     saveState();
+    syncMemberDirectory();
   });
   joinInput.addEventListener("change",(e)=>{
     state.profile.joinDate = e.target.value;
