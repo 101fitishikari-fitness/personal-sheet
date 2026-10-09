@@ -1770,7 +1770,7 @@ function defaultState(){
   months[mk] = { exercises: [ blankExercise(), blankExercise(), blankExercise() ] };
   return {
     months, monthOrder: [mk],
-    careVideos:{}, careChecks:{}, careLibrary: JSON.parse(JSON.stringify(CARE_LIBRARY_DEFAULT)), cardio:[],
+    careChecks:{}, cardio:[],
     medical: { metrics: DEFAULT_METRICS.map(m=>({...m})), records: [], lesch: {axis:"cross", type:"1"} },
     checklists: { defs: JSON.parse(JSON.stringify(CHECKLIST_DEFS)), records: [] },
     diet: [],
@@ -1798,47 +1798,11 @@ async function loadState(){
     const res = await window.storage.get(STORAGE_KEY);
     if(res && res.value){
       state = JSON.parse(res.value);
-      if(!state.careVideos) state.careVideos = {};
       if(!state.careChecks) state.careChecks = {};
-      if(!state.careLibrary) state.careLibrary = JSON.parse(JSON.stringify(CARE_LIBRARY_DEFAULT));
-      // add any newly introduced groups/items without touching what staff already edited
-      CARE_LIBRARY_DEFAULT.forEach(defGroup=>{
-        let g = state.careLibrary.find(x=>x.key===defGroup.key);
-        if(!g){ state.careLibrary.push(JSON.parse(JSON.stringify(defGroup))); return; }
-        if(defGroup.note!==undefined && g.note===undefined) g.note = defGroup.note;
-        defGroup.items.forEach(defItem=>{
-          if(!g.items.find(it=>it.id===defItem.id)) g.items.push({...defItem});
-        });
-      });
-      // 新しく追加した構造用フィールド（deviceType等）を、既存項目にも補完
-      CARE_LIBRARY_DEFAULT.forEach(defGroup=>{
-        const g2 = state.careLibrary.find(x=>x.key===defGroup.key);
-        if(!g2) return;
-        defGroup.items.forEach(defItem=>{
-          const it = g2.items.find(x=>x.id===defItem.id);
-          if(!it) return;
-          if(defItem.deviceType!==undefined && it.deviceType===undefined) it.deviceType = defItem.deviceType;
-          if(defItem.bodyPart!==undefined && it.bodyPart===undefined) it.bodyPart = defItem.bodyPart;
-          if(defItem.category!==undefined && it.category===undefined) it.category = defItem.category;
-        });
-      });
-      // 個別の名称・対象の更新（既存IDのまま内容だけ変わったもの）
-      const careFieldFixes = [
-        {id:"c2-16", name:"グリッド グルト"},
-        {id:"c3-3", who:"もも外が硬い人"},
-        {id:"c3-7", who:"仰向け姿勢"},
-      ];
-      state.careLibrary.forEach(g=>{
-        g.items.forEach(it=>{
-          const fix = careFieldFixes.find(f=>f.id===it.id);
-          if(fix){ if(fix.name) it.name = fix.name; if(fix.who!==undefined) it.who = fix.who; }
-        });
-      });
-      // 差し替え済みの旧クールダウン仮項目を削除
-      const removedCareIds = ["c5-1","c5-2","c5-3","c5-4","c5-5"];
-      state.careLibrary.forEach(g=>{
-        g.items = g.items.filter(it=>!removedCareIds.includes(it.id));
-      });
+      // ケア＆ストレッチ（メニュー構成・動画URL）は共有データへ移行済み。旧データは引き継ぎ用に一時保持
+      if(state.careVideos && Object.keys(state.careVideos).length) state.__legacyCareVideos = state.careVideos;
+      delete state.careVideos;
+      delete state.careLibrary;
       if(!state.cardio) state.cardio = [];
       if(!state.medical) state.medical = { metrics: DEFAULT_METRICS.map(m=>({...m})), records: [], lesch: {axis:"cross", type:"1"} };
       if(!state.medical.lesch) state.medical.lesch = {axis:"cross", type:"1"};
@@ -1980,6 +1944,81 @@ async function saveState(){
     clearTimeout(saveTimer);
     saveTimer = setTimeout(()=>tick.classList.remove("show"), 1200);
   }catch(e){ console.error("save failed", e); }
+}
+
+/* ===== ケア＆ストレッチ共有データ（全会員共通・スタッフが1回登録すれば全員に反映） =====
+   メニュー構成（careLibrary）と動画URL（careVideos）は全員共通。
+   「やった日のチェック（careChecks）」だけは会員ごとの個人データのまま。 */
+const CARE_SHARED_KEY = "care-shared-v1";
+let careShared = null;
+
+function defaultCareShared(){
+  return { careLibrary: JSON.parse(JSON.stringify(CARE_LIBRARY_DEFAULT)), careVideos: {} };
+}
+
+async function loadCareShared(){
+  try{
+    const res = await window.storage.get(CARE_SHARED_KEY, true);
+    if(res && res.value) careShared = JSON.parse(res.value);
+  }catch(e){ /* 未登録（初回）の場合はここに来る */ }
+  if(!careShared) careShared = defaultCareShared();
+  if(!careShared.careLibrary) careShared.careLibrary = JSON.parse(JSON.stringify(CARE_LIBRARY_DEFAULT));
+  if(!careShared.careVideos) careShared.careVideos = {};
+
+  // 新しく追加された初期メニューを、スタッフが編集済みの内容を壊さずに補完
+  CARE_LIBRARY_DEFAULT.forEach(defGroup=>{
+    let g = careShared.careLibrary.find(x=>x.key===defGroup.key);
+    if(!g){ careShared.careLibrary.push(JSON.parse(JSON.stringify(defGroup))); return; }
+    if(defGroup.note!==undefined && g.note===undefined) g.note = defGroup.note;
+    defGroup.items.forEach(defItem=>{
+      if(!g.items.find(it=>it.id===defItem.id)) g.items.push({...defItem});
+    });
+  });
+  CARE_LIBRARY_DEFAULT.forEach(defGroup=>{
+    const g2 = careShared.careLibrary.find(x=>x.key===defGroup.key);
+    if(!g2) return;
+    defGroup.items.forEach(defItem=>{
+      const it = g2.items.find(x=>x.id===defItem.id);
+      if(!it) return;
+      if(defItem.deviceType!==undefined && it.deviceType===undefined) it.deviceType = defItem.deviceType;
+      if(defItem.bodyPart!==undefined && it.bodyPart===undefined) it.bodyPart = defItem.bodyPart;
+      if(defItem.category!==undefined && it.category===undefined) it.category = defItem.category;
+    });
+  });
+  const careFieldFixes = [
+    {id:"c2-16", name:"グリッド グルト"},
+    {id:"c3-3", who:"もも外が硬い人"},
+    {id:"c3-7", who:"仰向け姿勢"},
+  ];
+  careShared.careLibrary.forEach(g=>{
+    g.items.forEach(it=>{
+      const fix = careFieldFixes.find(f=>f.id===it.id);
+      if(fix){ if(fix.name) it.name = fix.name; if(fix.who!==undefined) it.who = fix.who; }
+    });
+  });
+  const removedCareIds = ["c5-1","c5-2","c5-3","c5-4","c5-5"];
+  careShared.careLibrary.forEach(g=>{
+    g.items = g.items.filter(it=>!removedCareIds.includes(it.id));
+  });
+
+  // 以前、会員ごとに保存していたケア動画URLが残っていれば、共有側に引き継ぐ（スタッフ操作時のみ）
+  if(state && state.__legacyCareVideos && isTrainerUnlocked()){
+    Object.keys(state.__legacyCareVideos).forEach(id=>{
+      if(!careShared.careVideos[id]) careShared.careVideos[id] = state.__legacyCareVideos[id];
+    });
+    delete state.__legacyCareVideos;
+    saveCareShared();
+  }
+}
+
+async function saveCareShared(){
+  try{
+    await window.storage.set(CARE_SHARED_KEY, JSON.stringify(careShared), true);
+    const tick = document.getElementById("saveTick");
+    tick.classList.add("show");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>tick.classList.remove("show"), 1200);
+  }catch(e){ console.error("care shared save failed", e); }
 }
 
 let activeTab = null;
@@ -2217,7 +2256,7 @@ function renderWeeks(){
 }
 
 function careItemCardHTML(it, gi, unlocked){
-  const video = state.careVideos[it.id] || "";
+  const video = careShared.careVideos[it.id] || "";
   return `
     <div class="care-item">
       <div class="care-item-main">
@@ -2264,7 +2303,7 @@ function renderCareGroups(){
   const unlocked = isTrainerUnlocked();
   if(!window.__careFilter) window.__careFilter = {};
 
-  state.careLibrary.forEach((g, gi)=>{
+  careShared.careLibrary.forEach((g, gi)=>{
     const div = document.createElement("div");
     div.className = "care-group";
 
@@ -2300,7 +2339,7 @@ function renderCareGroups(){
   careWrap.querySelectorAll(".care-add-item").forEach(btn=>{
     btn.addEventListener("click",()=>{
       const gi = Number(btn.dataset.careGroupIdx);
-      const g = state.careLibrary[gi];
+      const g = careShared.careLibrary[gi];
       const name = prompt("種目名");
       if(!name) return;
       const time = prompt("秒数・回数など", "30秒") || "";
@@ -2314,7 +2353,7 @@ function renderCareGroups(){
       }
       const who = prompt("対象者メモ（任意）") || "";
       g.items.push({id:"custom-care-"+Date.now(), name, time, who, ...extra});
-      saveState();
+      saveCareShared();
       renderCareGroups();
       attachListeners();
     });
@@ -2323,8 +2362,8 @@ function renderCareGroups(){
     btn.addEventListener("click",()=>{
       const gi = Number(btn.dataset.careGroupIdx);
       const id = btn.dataset.careItemId;
-      state.careLibrary[gi].items = state.careLibrary[gi].items.filter(it=>it.id!==id);
-      saveState();
+      careShared.careLibrary[gi].items = careShared.careLibrary[gi].items.filter(it=>it.id!==id);
+      saveCareShared();
       renderCareGroups();
       attachListeners();
     });
@@ -2347,7 +2386,7 @@ function renderCareMonthly(){
       <table class="checkgrid">
         <thead><tr><th class="ex-col">グループ</th>${days.map(d=>`<th>${d}</th>`).join("")}</tr></thead>
         <tbody>
-          ${state.careLibrary.map((g,gi)=>{
+          ${careShared.careLibrary.map((g,gi)=>{
             const rowChecks = state.careChecks[mk][gi] || {};
             const doneCount = days.filter(d=>rowChecks[d]).length;
             return `<tr>
@@ -2522,8 +2561,8 @@ function attachListeners(){
     el.addEventListener("change",(e)=>{
       const id = e.target.dataset.care;
       const val = e.target.value.trim();
-      if(val){ state.careVideos[id] = val; } else { delete state.careVideos[id]; }
-      saveState();
+      if(val){ careShared.careVideos[id] = val; } else { delete careShared.careVideos[id]; }
+      saveCareShared();
       renderWeeks();
       setActivePanel();
     });
@@ -3889,6 +3928,7 @@ function renderVisibilityPanel(){
     renderMemberBadge();
   }
   await loadState();
+  await loadCareShared();
   if(!activeTab) activeTab = state.monthOrder[0];
   applyTheme();
   renderProfileHeader();
