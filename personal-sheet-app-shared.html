@@ -715,6 +715,29 @@
     color:#06C755;font-size:13px;font-weight:700;text-decoration:none;
   }
 
+  /* cardio breakdown */
+  .cardio-block{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px;}
+  .cardio-block-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .cardio-block-title{font-size:13px;margin:0 0 10px;color:var(--ink);}
+  .cardio-block-head .cardio-block-title{margin:0;}
+  .cardio-block-head select{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:6px 10px;font-size:12px;font-family:inherit;}
+  .cardio-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;}
+  .cardio-legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink);}
+  .cardio-legend-item i, .cardio-type-name i{display:inline-block;width:12px;height:12px;border-radius:3px;flex:none;}
+  .cardio-type-list{display:flex;flex-direction:column;gap:8px;}
+  .cardio-type-row{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;}
+  .cardio-type-name{display:flex;align-items:center;gap:6px;font-size:13px;}
+  .cardio-type-bar{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden;}
+  .cardio-type-bar div{height:100%;border-radius:999px;}
+  .cardio-type-nums{display:flex;gap:12px;font-size:12px;color:var(--ink-dim);justify-content:flex-end;}
+  .cardio-type-nums span{min-width:56px;text-align:right;}
+  .cardio-type-nums b{font-size:16px;color:var(--ink);}
+  .cardio-type-total{border-top:1px solid var(--line);padding-top:8px;margin-top:2px;font-weight:700;}
+  @media (max-width:520px){
+    .cardio-type-row{grid-template-columns:1fr auto;}
+    .cardio-type-bar{grid-column:1 / -1;order:3;}
+  }
+
   footer.note{margin-top:24px;font-size:11px;color:var(--ink-dim);line-height:1.7;border-top:1px solid var(--line);padding-top:12px;}
   .save-tick{position:fixed;bottom:16px;right:16px;background:var(--surface-2);border:1px solid var(--lime);
     color:var(--lime);font-size:11px;padding:8px 14px;border-radius:999px;opacity:0;
@@ -2414,34 +2437,146 @@ function renderCareMonthly(){
   });
 }
 
+const CARDIO_COLORS = {
+  "ウォーキング":"#6CC24A", "ランニング":"#FF8A3D", "バイク":"#4AC2C2",
+  "エリプティカル":"#C9A0FF", "水泳":"#5AA9FF", "その他":"#E9C43A"
+};
+function cardioColor(type){ return CARDIO_COLORS[type] || CARDIO_COLORS["その他"]; }
+
+/* 月ごとの積み上げ棒グラフ（種目別に色分け） */
+function cardioStackedChartSVG(months, byMonthType, target){
+  const width = 700, height = 230;
+  const padL = 44, padR = 12, padT = 18, padB = 30;
+  const innerW = width-padL-padR, innerH = height-padT-padB;
+  const totals = months.map(m=> Object.values(byMonthType[m]).reduce((s,v)=>s+v.duration,0));
+  let maxV = Math.max(...totals, target?Number(target):0, 10) * 1.15;
+  const yPos = v => padT + innerH - (v/maxV)*innerH;
+  const gap = innerW/months.length;
+  const barW = Math.min(46, gap-14);
+  let grid = "";
+  [0,0.5,1].forEach(f=>{
+    const v = (maxV/1.15)*f;
+    grid += `<line x1="${padL}" y1="${yPos(v).toFixed(1)}" x2="${padL+innerW}" y2="${yPos(v).toFixed(1)}" stroke="var(--line)" stroke-width="1"/>
+      <text x="${padL-6}" y="${(yPos(v)+3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-dim)" font-family="SFMono-Regular,monospace">${Math.round(v)}</text>`;
+  });
+  let bars = "";
+  months.forEach((m,i)=>{
+    const x = padL + i*gap + (gap-barW)/2;
+    let acc = 0;
+    CARDIO_TYPES.concat(Object.keys(byMonthType[m]).filter(t=>!CARDIO_TYPES.includes(t))).forEach(t=>{
+      const d = byMonthType[m][t];
+      if(!d || d.duration<=0) return;
+      const y1 = yPos(acc+d.duration), y0 = yPos(acc);
+      bars += `<rect x="${x.toFixed(1)}" y="${y1.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1,y0-y1).toFixed(1)}" fill="${cardioColor(t)}"/>`;
+      acc += d.duration;
+    });
+    const [yy,mm] = m.split("-");
+    bars += `<text x="${(x+barW/2).toFixed(1)}" y="${(yPos(acc)-4).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)" font-family="SFMono-Regular,monospace">${acc}</text>
+      <text x="${(x+barW/2).toFixed(1)}" y="${height-10}" text-anchor="middle" font-size="11" fill="var(--ink-dim)">${Number(mm)}月</text>`;
+  });
+  let targetLine = "";
+  if(target){
+    const ty = yPos(Number(target));
+    targetLine = `<line x1="${padL}" y1="${ty.toFixed(1)}" x2="${padL+innerW}" y2="${ty.toFixed(1)}" stroke="var(--flame)" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <text x="${padL+innerW}" y="${(ty-4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--flame)" font-family="SFMono-Regular,monospace">月間目標 ${target}分</text>`;
+  }
+  return `<svg viewBox="0 0 ${width} ${height}" style="width:100%;height:auto;display:block;">${grid}${bars}${targetLine}</svg>`;
+}
+
 function renderCardioMonthly(){
   const host = document.getElementById("cardio-monthly");
   if(!host) return;
-  const byMonth = {};
+  // byMonthType[月][種目] = {duration, distance, count}
+  const byMonthType = {};
   state.cardio.forEach(c=>{
     const m = c.date.slice(0,7);
-    if(!byMonth[m]) byMonth[m] = {duration:0, distance:0, count:0};
-    byMonth[m].duration += Number(c.duration)||0;
-    byMonth[m].distance += Number(c.distance)||0;
-    byMonth[m].count++;
+    const t = c.type || "その他";
+    if(!byMonthType[m]) byMonthType[m] = {};
+    if(!byMonthType[m][t]) byMonthType[m][t] = {duration:0, distance:0, count:0};
+    byMonthType[m][t].duration += Number(c.duration)||0;
+    byMonthType[m][t].distance += Number(c.distance)||0;
+    byMonthType[m][t].count++;
   });
-  const months = Object.keys(byMonth).sort();
+  const allMonths = Object.keys(byMonthType).sort();
+  const months = allMonths.slice(-8); // 直近8か月をグラフ表示
   const thisMonth = currentMonthKey();
   const target = state.goals.targets["__cardio_total__"];
-  const thisMonthData = byMonth[thisMonth];
 
-  const barPoints = months.map(m=>({date: m+"-01", value: byMonth[m].duration}));
-  const svg = barChartSVG(barPoints, {width:700, height:110, max: target?Number(target)*1.2:undefined});
+  const sumMonth = m => {
+    const o = {duration:0, distance:0, count:0};
+    Object.values(byMonthType[m]||{}).forEach(v=>{ o.duration+=v.duration; o.distance+=v.distance; o.count+=v.count; });
+    return o;
+  };
+  const cur = sumMonth(thisMonth);
+
+  // 種目別の内訳を見る月（初期値：今月。記録が無ければ最新の記録月）
+  const selectable = Array.from(new Set([thisMonth, ...allMonths])).sort().reverse();
+  if(!window.__cardioDetailMonth || !selectable.includes(window.__cardioDetailMonth)){
+    window.__cardioDetailMonth = byMonthType[thisMonth] ? thisMonth : (allMonths[allMonths.length-1] || thisMonth);
+  }
+  const dm = window.__cardioDetailMonth;
+  const dmTotal = sumMonth(dm);
+  const dmTypes = Object.keys(byMonthType[dm]||{}).sort((a,b)=> byMonthType[dm][b].duration - byMonthType[dm][a].duration);
+
+  const legendTypes = [];
+  months.forEach(m=> Object.keys(byMonthType[m]).forEach(t=>{ if(!legendTypes.includes(t)) legendTypes.push(t); }));
 
   host.innerHTML = `
     <div class="cardio-summary-head">
-      <div class="stat-pill">今月の合計時間 <span class="mono">${thisMonthData?thisMonthData.duration:0}分</span></div>
-      <div class="stat-pill">今月の合計距離 <span class="mono">${thisMonthData?thisMonthData.distance.toFixed(1):0}km</span></div>
-      <div class="stat-pill">今月の実施回数 <span class="mono">${thisMonthData?thisMonthData.count:0}回</span></div>
-      ${target ? `<div class="stat-pill target-pill">月間目標 <span class="mono">${target}分</span>　達成率 <span class="mono">${thisMonthData ? Math.round(thisMonthData.duration/Number(target)*100) : 0}%</span></div>` : ""}
+      <div class="stat-pill">今月の合計時間 <span class="mono">${cur.duration}分</span></div>
+      <div class="stat-pill">今月の合計距離 <span class="mono">${cur.distance.toFixed(1)}km</span></div>
+      <div class="stat-pill">今月の実施回数 <span class="mono">${cur.count}回</span></div>
+      ${target ? `<div class="stat-pill target-pill">月間目標 <span class="mono">${target}分</span>　達成率 <span class="mono">${Math.round(cur.duration/Number(target)*100)}%</span></div>` : ""}
     </div>
-    <div class="cardio-chart-wrap">${svg || `<div class="chart-empty">まだ記録がありません</div>`}</div>
+
+    <div class="cardio-block">
+      <h4 class="cardio-block-title">月ごとの運動時間（種目別の色分け・単位：分）</h4>
+      ${months.length ? `
+        <div class="cardio-chart-wrap">${cardioStackedChartSVG(months, byMonthType, target)}</div>
+        <div class="cardio-legend">
+          ${legendTypes.map(t=>`<span class="cardio-legend-item"><i style="background:${cardioColor(t)}"></i>${escapeAttr(t)}</span>`).join("")}
+        </div>
+      ` : `<div class="chart-empty">まだ記録がありません。下の入力欄から記録すると、ここにグラフが表示されます。</div>`}
+    </div>
+
+    <div class="cardio-block">
+      <div class="cardio-block-head">
+        <h4 class="cardio-block-title">種目ごとの内訳</h4>
+        <select id="cardio-detail-month">
+          ${selectable.map(m=>{ const [y,mm]=m.split("-"); return `<option value="${m}" ${m===dm?"selected":""}>${y}年${Number(mm)}月</option>`; }).join("")}
+        </select>
+      </div>
+      ${dmTypes.length ? `
+        <div class="cardio-type-list">
+          ${dmTypes.map(t=>{
+            const d = byMonthType[dm][t];
+            const share = dmTotal.duration>0 ? Math.round(d.duration/dmTotal.duration*100) : 0;
+            return `
+              <div class="cardio-type-row">
+                <div class="cardio-type-name"><i style="background:${cardioColor(t)}"></i>${escapeAttr(t)}</div>
+                <div class="cardio-type-bar"><div style="width:${share}%;background:${cardioColor(t)}"></div></div>
+                <div class="cardio-type-nums mono">
+                  <span><b>${d.duration}</b>分</span>
+                  <span>${d.distance>0 ? "<b>"+d.distance.toFixed(1)+"</b>km" : "－"}</span>
+                  <span><b>${d.count}</b>回</span>
+                </div>
+              </div>`;
+          }).join("")}
+          <div class="cardio-type-row cardio-type-total">
+            <div class="cardio-type-name">合計</div>
+            <div class="cardio-type-bar"></div>
+            <div class="cardio-type-nums mono">
+              <span><b>${dmTotal.duration}</b>分</span>
+              <span>${dmTotal.distance>0 ? "<b>"+dmTotal.distance.toFixed(1)+"</b>km" : "－"}</span>
+              <span><b>${dmTotal.count}</b>回</span>
+            </div>
+          </div>
+        </div>
+      ` : `<div class="chart-empty">この月の記録はありません</div>`}
+    </div>
   `;
+  const sel = host.querySelector("#cardio-detail-month");
+  if(sel) sel.addEventListener("change",(e)=>{ window.__cardioDetailMonth = e.target.value; renderCardioMonthly(); });
 }
 
 function renderCardioForm(){
