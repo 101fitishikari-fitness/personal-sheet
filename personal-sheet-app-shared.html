@@ -721,6 +721,8 @@
   .cardio-block-title{font-size:13px;margin:0 0 10px;color:var(--ink);}
   .cardio-block-head .cardio-block-title{margin:0;}
   .cardio-block-head select{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:6px 10px;font-size:12px;font-family:inherit;}
+  .cardio-hint{font-size:11px;color:var(--ink-dim);line-height:1.7;margin-top:8px;}
+  .cardio-metric-seg button{padding:6px 12px;font-size:12px;}
   .cardio-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;}
   .cardio-legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink);}
   .cardio-legend-item i, .cardio-type-name i{display:inline-block;width:12px;height:12px;border-radius:3px;flex:none;}
@@ -2444,12 +2446,14 @@ const CARDIO_COLORS = {
 function cardioColor(type){ return CARDIO_COLORS[type] || CARDIO_COLORS["その他"]; }
 
 /* 月ごとの積み上げ棒グラフ（種目別に色分け） */
-function cardioStackedChartSVG(months, byMonthType, target){
+function cardioStackedChartSVG(months, byMonthType, target, metric){
+  metric = metric || "duration";
+  const fmt = v => metric==="distance" ? (Math.round(v*10)/10) : Math.round(v);
   const width = 700, height = 230;
   const padL = 44, padR = 12, padT = 18, padB = 30;
   const innerW = width-padL-padR, innerH = height-padT-padB;
-  const totals = months.map(m=> Object.values(byMonthType[m]).reduce((s,v)=>s+v.duration,0));
-  let maxV = Math.max(...totals, target?Number(target):0, 10) * 1.15;
+  const totals = months.map(m=> Object.values(byMonthType[m]).reduce((s,v)=>s+v[metric],0));
+  let maxV = Math.max(...totals, (target && metric==="duration")?Number(target):0, metric==="distance"?5:(metric==="count"?3:10)) * 1.15;
   const yPos = v => padT + innerH - (v/maxV)*innerH;
   const gap = innerW/months.length;
   const barW = Math.min(46, gap-14);
@@ -2457,7 +2461,7 @@ function cardioStackedChartSVG(months, byMonthType, target){
   [0,0.5,1].forEach(f=>{
     const v = (maxV/1.15)*f;
     grid += `<line x1="${padL}" y1="${yPos(v).toFixed(1)}" x2="${padL+innerW}" y2="${yPos(v).toFixed(1)}" stroke="var(--line)" stroke-width="1"/>
-      <text x="${padL-6}" y="${(yPos(v)+3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-dim)" font-family="SFMono-Regular,monospace">${Math.round(v)}</text>`;
+      <text x="${padL-6}" y="${(yPos(v)+3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-dim)" font-family="SFMono-Regular,monospace">${fmt(v)}</text>`;
   });
   let bars = "";
   months.forEach((m,i)=>{
@@ -2465,17 +2469,17 @@ function cardioStackedChartSVG(months, byMonthType, target){
     let acc = 0;
     CARDIO_TYPES.concat(Object.keys(byMonthType[m]).filter(t=>!CARDIO_TYPES.includes(t))).forEach(t=>{
       const d = byMonthType[m][t];
-      if(!d || d.duration<=0) return;
-      const y1 = yPos(acc+d.duration), y0 = yPos(acc);
+      if(!d || !(d[metric]>0)) return;
+      const y1 = yPos(acc+d[metric]), y0 = yPos(acc);
       bars += `<rect x="${x.toFixed(1)}" y="${y1.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1,y0-y1).toFixed(1)}" fill="${cardioColor(t)}"/>`;
-      acc += d.duration;
+      acc += d[metric];
     });
     const [yy,mm] = m.split("-");
-    bars += `<text x="${(x+barW/2).toFixed(1)}" y="${(yPos(acc)-4).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)" font-family="SFMono-Regular,monospace">${acc}</text>
+    bars += `<text x="${(x+barW/2).toFixed(1)}" y="${(yPos(acc)-4).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)" font-family="SFMono-Regular,monospace">${fmt(acc)}</text>
       <text x="${(x+barW/2).toFixed(1)}" y="${height-10}" text-anchor="middle" font-size="11" fill="var(--ink-dim)">${Number(mm)}月</text>`;
   });
   let targetLine = "";
-  if(target){
+  if(target && metric==="duration"){
     const ty = yPos(Number(target));
     targetLine = `<line x1="${padL}" y1="${ty.toFixed(1)}" x2="${padL+innerW}" y2="${ty.toFixed(1)}" stroke="var(--flame)" stroke-width="1.5" stroke-dasharray="5 4"/>
       <text x="${padL+innerW}" y="${(ty-4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--flame)" font-family="SFMono-Regular,monospace">月間目標 ${target}分</text>`;
@@ -2518,8 +2522,20 @@ function renderCardioMonthly(){
   const dmTotal = sumMonth(dm);
   const dmTypes = Object.keys(byMonthType[dm]||{}).sort((a,b)=> byMonthType[dm][b].duration - byMonthType[dm][a].duration);
 
+  const metric = window.__cardioMetric || "duration";
+  const metricInfo = {
+    duration:{label:"時間", unit:"分"},
+    distance:{label:"距離", unit:"km"},
+    count:{label:"回数", unit:"回"},
+  };
   const legendTypes = [];
-  months.forEach(m=> Object.keys(byMonthType[m]).forEach(t=>{ if(!legendTypes.includes(t)) legendTypes.push(t); }));
+  const hiddenTypes = []; // 記録はあるが、選んでいる指標が未入力で棒に出ない種目
+  months.forEach(m=> Object.keys(byMonthType[m]).forEach(t=>{
+    if(byMonthType[m][t][metric]>0){ if(!legendTypes.includes(t)) legendTypes.push(t); }
+  }));
+  months.forEach(m=> Object.keys(byMonthType[m]).forEach(t=>{
+    if(!legendTypes.includes(t) && !hiddenTypes.includes(t)) hiddenTypes.push(t);
+  }));
 
   host.innerHTML = `
     <div class="cardio-summary-head">
@@ -2530,12 +2546,18 @@ function renderCardioMonthly(){
     </div>
 
     <div class="cardio-block">
-      <h4 class="cardio-block-title">月ごとの運動時間（種目別の色分け・単位：分）</h4>
+      <div class="cardio-block-head">
+        <h4 class="cardio-block-title">月ごとの${metricInfo[metric].label}（種目別の色分け・単位：${metricInfo[metric].unit}）</h4>
+        <div class="seg cardio-metric-seg">
+          ${Object.keys(metricInfo).map(k=>`<button data-cardio-metric="${k}" class="${k===metric?"active":""}">${metricInfo[k].label}</button>`).join("")}
+        </div>
+      </div>
       ${months.length ? `
-        <div class="cardio-chart-wrap">${cardioStackedChartSVG(months, byMonthType, target)}</div>
+        <div class="cardio-chart-wrap">${cardioStackedChartSVG(months, byMonthType, target, metric)}</div>
         <div class="cardio-legend">
           ${legendTypes.map(t=>`<span class="cardio-legend-item"><i style="background:${cardioColor(t)}"></i>${escapeAttr(t)}</span>`).join("")}
         </div>
+        ${hiddenTypes.length ? `<div class="cardio-hint">※ ${hiddenTypes.map(escapeAttr).join("・")} は「${metricInfo[metric].label}」が入力されていないため、このグラフには出ません。上のボタンで「時間」「距離」「回数」を切り替えて見られます。</div>` : ""}
       ` : `<div class="chart-empty">まだ記録がありません。下の入力欄から記録すると、ここにグラフが表示されます。</div>`}
     </div>
 
@@ -2575,6 +2597,9 @@ function renderCardioMonthly(){
       ` : `<div class="chart-empty">この月の記録はありません</div>`}
     </div>
   `;
+  host.querySelectorAll("[data-cardio-metric]").forEach(b=>{
+    b.addEventListener("click",()=>{ window.__cardioMetric = b.dataset.cardioMetric; renderCardioMonthly(); });
+  });
   const sel = host.querySelector("#cardio-detail-month");
   if(sel) sel.addEventListener("change",(e)=>{ window.__cardioDetailMonth = e.target.value; renderCardioMonthly(); });
 }
