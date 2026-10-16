@@ -592,6 +592,13 @@
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
     padding:16px;margin-bottom:18px;
   }
+  .care-explain{background:color-mix(in srgb, var(--lime) 8%, transparent);border:1px solid var(--lime-dim);border-radius:10px;padding:12px 14px;margin-bottom:12px;}
+  .care-explain-title{font-size:13px;font-weight:700;margin-bottom:6px;}
+  .care-explain ul{margin:0 0 8px;padding-left:18px;font-size:13px;line-height:1.8;color:var(--ink);}
+  .care-explain b{color:var(--lime);}
+  .care-explain-key{font-size:14px;font-weight:800;color:var(--lime);}
+  .care-group-required{border:1px solid var(--lime);border-radius:var(--radius);padding:12px 14px;background:color-mix(in srgb, var(--lime) 6%, transparent);}
+  .care-required-note{font-size:12px;color:var(--lime);font-weight:700;margin:0 0 8px;}
   .care-monthly-head{margin-bottom:10px;}
   .care-monthly-head input{
     background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
@@ -1525,7 +1532,7 @@ const CARE_LIBRARY_DEFAULT = [
     {id:"c4-8", name:"ソアスストレッチ", time:"40秒", who:"股関節が硬い人", category:"下肢"},
     {id:"c4-17", name:"フットフィンガー ストレッチ", time:"40秒", who:"足指が丸まっている人", category:"下肢"},
   ]},
-  {key:"warmup", label:"④ ウォームアップ", filterType:"none", items:[
+  {key:"warmup", label:"ウォームアップ（必須）", filterType:"none", items:[
     {id:"c1-11", name:"ビジョントレーニング", time:"-"},
     {id:"c1-12", name:"カーフリセット", time:"-"},
     {id:"c1-1", name:"ストレッチポール リブゲージ", time:"-"},
@@ -1539,7 +1546,7 @@ const CARE_LIBRARY_DEFAULT = [
     {id:"c1-9", name:"SLR", time:"40秒×3"},
     {id:"c1-10", name:"ヒップリフト", time:"40秒×3"},
   ]},
-  {key:"cooldown", label:"⑤ クールダウン", filterType:"none", items:[
+  {key:"cooldown", label:"④ クールダウン", filterType:"none", items:[
     {id:"c6-1", name:"バイク", time:"5分"},
     {id:"c6-2", name:"カーフリセット", time:"-"},
     {id:"c6-3", name:"もも前ストレッチ", time:"-"},
@@ -2026,6 +2033,9 @@ async function loadCareShared(){
     g.items = g.items.filter(it=>!removedCareIds.includes(it.id));
   });
 
+  // グループ名（番号・必須表記）を最新の表記にそろえる
+  careShared.careLibrary.forEach(g=>{ if(CARE_GROUP_LABELS[g.key]) g.label = CARE_GROUP_LABELS[g.key]; });
+
   // 以前、会員ごとに保存していたケア動画URLが残っていれば、共有側に引き継ぐ（スタッフ操作時のみ）
   if(state && state.__legacyCareVideos && isTrainerUnlocked()){
     Object.keys(state.__legacyCareVideos).forEach(id=>{
@@ -2321,6 +2331,23 @@ function renderCareItemsHTML(visibleItems, gi, unlocked){
   }).join("");
 }
 
+const CARE_GROUP_LABELS = {
+  warmup:"ウォームアップ（必須）",
+  trigger:"① ケア（トリガーポイント・ボール）",
+  breath:"② 呼吸",
+  stretch:"③ ストレッチ",
+  cooldown:"④ クールダウン",
+};
+/* 表示順：ウォームアップ（必須）を先頭に。順番だけ入れ替え、チェック記録用の番号(gi)は元のまま */
+function careDisplayOrder(){
+  const idx = careShared.careLibrary.map((g,i)=>i);
+  return idx.sort((a,b)=>{
+    const wa = careShared.careLibrary[a].key==="warmup" ? 0 : 1;
+    const wb = careShared.careLibrary[b].key==="warmup" ? 0 : 1;
+    return wa-wb || a-b;
+  });
+}
+
 function renderCareGroups(){
   const careWrap = document.getElementById("care-groups");
   if(!careWrap) return;
@@ -2328,9 +2355,11 @@ function renderCareGroups(){
   const unlocked = isTrainerUnlocked();
   if(!window.__careFilter) window.__careFilter = {};
 
-  careShared.careLibrary.forEach((g, gi)=>{
+  careDisplayOrder().forEach(gi=>{
+    const g = careShared.careLibrary[gi];
+    const isReq = g.key==="warmup";
     const div = document.createElement("div");
-    div.className = "care-group";
+    div.className = "care-group" + (isReq ? " care-group-required" : "");
 
     let filterBar = "";
     let visibleItems = g.items;
@@ -2347,6 +2376,7 @@ function renderCareGroups(){
 
     div.innerHTML = `
       <h3>${g.label} ${unlocked ? `<button class="add-row care-add-item" data-care-group-idx="${gi}" style="margin:0 0 0 8px;font-size:10px;padding:4px 8px;">＋ 項目を追加</button>` : ""}</h3>
+      ${isReq ? `<div class="care-required-note">運動の前に、必ず行いましょう。</div>` : ""}
       ${g.note ? `<div class="care-group-note">対象：${escapeAttr(g.note)}</div>` : ""}
       ${filterBar}
       ${renderCareItemsHTML(visibleItems, gi, unlocked)}
@@ -2404,6 +2434,15 @@ function renderCareMonthly(){
   const days = monthDays(mk);
 
   host.innerHTML = `
+    <div class="care-explain">
+      <div class="care-explain-title">📝 チェックのしかた</div>
+      <ul>
+        <li>やった日のマスをタップすると ○ がつきます（もう一度タップすると消えます）。</li>
+        <li><b>ウォームアップ（必須）</b>：運動の前に必ず行い、行った日にチェックしましょう。</li>
+        <li><b>ケア・呼吸・ストレッチ・クールダウン</b>：その中のメニューを<b>1種類だけ</b>実施した日でも、チェックしてOKです。</li>
+      </ul>
+      <div class="care-explain-key">大切なのは、毎日なにかを続けること。</div>
+    </div>
     <div class="care-monthly-head">
       <input type="month" id="care-month-picker" value="${mk}">
     </div>
@@ -2411,7 +2450,8 @@ function renderCareMonthly(){
       <table class="checkgrid">
         <thead><tr><th class="ex-col">グループ</th>${days.map(d=>`<th>${d}</th>`).join("")}</tr></thead>
         <tbody>
-          ${careShared.careLibrary.map((g,gi)=>{
+          ${careDisplayOrder().map(gi=>{
+            const g = careShared.careLibrary[gi];
             const rowChecks = state.careChecks[mk][gi] || {};
             const doneCount = days.filter(d=>rowChecks[d]).length;
             return `<tr>
